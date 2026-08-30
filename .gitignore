@@ -1,0 +1,31 @@
+# =============================================================================
+# Build artifacts - Typst
+# =============================================================================
+# Compiled PDFs from `task compile` and the release workflow
+# (e.g. src/resume.pdf, src/bragdoc.pdf, src/Resume_01012026.pdf)
+/src/*.pdf
+*.pdf
+
+# Typst cache directory (if enabled via --cache-path or config)
+.typst-cache/
+
+# =============================================================================
+# Taskfile
+# =============================================================================
+.task/
+
+# =============================================================================
+# Editor - Visual Studio Code
+# =============================================================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# =============================================================================
+# OS / misc
+# =============================================================================
+.DS_Store
+Thumbs.db

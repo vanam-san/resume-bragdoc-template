@@ -1,0 +1,45 @@
+version: '3'
+
+tasks:
+  default:
+    desc: Pull latest changes and start development
+    deps:
+      - pull
+      - dev
+
+  pull:
+    desc: Pull latest changes from Git
+    cmds:
+      - git pull
+
+  dev:
+    desc: Watch resume and bragdoc in parallel
+    deps:
+      - dev-resume
+      - dev-bragdoc
+
+  dev-resume:
+    desc: Watch and rebuild resume
+    cmds:
+      - typst watch src/resume.typ src/resume.pdf
+
+  dev-bragdoc:
+    desc: Watch and rebuild bragdoc
+    cmds:
+      - typst watch src/bragdoc.typ src/bragdoc.pdf
+
+  compile:
+    desc: Compile resume and bragdoc
+    deps:
+      - compile-resume
+      - compile-bragdoc
+
+  compile-resume:
+    desc: Compile resume PDF
+    cmds:
+      - typst compile src/resume.typ src/resume.pdf
+
+  compile-bragdoc:
+    desc: Compile bragdoc PDF
+    cmds:
+      - typst compile src/bragdoc.typ src/bragdoc.pdf

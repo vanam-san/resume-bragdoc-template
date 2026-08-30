@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v1.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Typst
+        uses: typst-community/setup-typst@v5
+        with:
+          typst-version: "0.15.1"
+
+      - name: Generate date string
+        id: date
+        run: echo "date=$(date +'%d%m%Y')" >> $GITHUB_OUTPUT
+
+      - name: Get previous release tag
+        id: prev-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
+          if [ "$PREV_TAG" = "null" ] || [ -z "$PREV_TAG" ]; then
+            PREV_TAG=""
+          fi
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -n "${{ steps.prev-tag.outputs.prev_tag }}" ]; then
+            RANGE="${{ steps.prev-tag.outputs.prev_tag }}..HEAD"
+          else
+            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+            RANGE="${FIRST_COMMIT}..HEAD"
+          fi
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$RANGE" --no-merges)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Compile Resume
+        run: |
+          typst compile src/resume.typ src/Resume_${{ steps.date.outputs.date }}.pdf
+
+      - name: Compile Brag Document
+        run: |
+          typst compile src/bragdoc.typ src/Bragdoc_${{ steps.date.outputs.date }}.pdf
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ secrets.TYPST_TOKEN }}
+          TAG: "${{ github.ref_name }}"
+        run: |
+          RELEASE_BODY="## Changes since last release"$'\n\n'
+          RELEASE_BODY+="${{ steps.changelog.outputs.changelog }}"$'\n\n'
+          RELEASE_BODY+="---"$'\n'
+          RELEASE_BODY+="**Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prev-tag.outputs.prev_tag }}...${{ github.ref_name }}"
+
+          echo "::group::Diagnostics"
+          ls -la src/*.pdf || echo "PDF assets missing"
+          gh auth status || echo "gh authentication failed"
+          echo "::endgroup::"
+
+          gh release create "$TAG" \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="Release - ${{ github.ref_name }}" \
+            --notes "$RELEASE_BODY" \
+            src/Resume_${{ steps.date.outputs.date }}.pdf \
+            src/Bragdoc_${{ steps.date.outputs.date }}.pdf

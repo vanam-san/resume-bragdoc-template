@@ -1,0 +1,12 @@
+changelog:
+  categories:
+    - title: Changes Made
+      labels:
+        - "*"
+      exclude:
+        labels:
+          - dependencies
+
+    - title: Added/Updated Dependencies
+      labels:
+        - dependencies
