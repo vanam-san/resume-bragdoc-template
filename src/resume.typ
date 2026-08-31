@@ -1,15 +1,10 @@
-// resume.typ - Resume Data & Entry Point
-// Edit data below to update resume. Formatting is in functions.typ.
-//
-// Content sourced (verbatim, satirical) from:
-// https://www.reddit.com/r/recruitinghell/comments/qhg5jo/this_resume_got_me_an_interview/
-// Replace placeholder contact info with your own if adapting.
+// Resume data and entry point. Edit this file to update content.
+// Formatting functions are in functions.typ.
+// Sample data is satirical - replace with your own career information.
 
 #import "functions.typ": cvinit, render-basic-info, render-summary, render-education, render-work, render-project, render-custom
 
-// =============================================================================
-// Personal Information
-// =============================================================================
+// Personal info - update with your details
 #let name = "YOUR NAME"
 #let title = "Senior Full Stack Engineer"
 #let location = "Palo Alto, California, USA"
@@ -37,15 +32,10 @@
   ),
 )
 
-// =============================================================================
-// Summary - Brief professional overview
-// =============================================================================
-// Keep this concise - 2-3 sentences max
+// Brief professional summary (2-3 sentences max)
 #let summary = "Experienced software engineer with a background of building scalable systems in the fintech, health, and media industries. Expert in JavaScript, TypeScript, Node.js, React AI, and C++ (and powered almost entirely by coffee and the occasional warp-core energy drink)."
 
-// =============================================================================
-// Education & Certifications
-// =============================================================================
+// Education entries
 #let educations = (
   (
     institution: "University of California, Berkeley",
@@ -60,9 +50,7 @@
   ),
 )
 
-// =============================================================================
-// Work Experience
-// =============================================================================
+// Work experience - companies with positions and bullet highlights
 #let works = (
   (
     name: "Instagram",
@@ -149,9 +137,7 @@
   // Add more companies as needed
 )
 
-// =============================================================================
-// Skills Section
-// =============================================================================
+// Technical skills and competencies
 #let skills_section = (
   title: "Technical & Core Competencies",
   highlights: (
@@ -174,9 +160,7 @@
   ),
 )
 
-// =============================================================================
-// Projects
-// =============================================================================
+// Notable projects
 #let projects = (
   (
     name: "News Feed Infrastructure",
@@ -192,9 +176,7 @@
   // Add more projects as needed
 )
 
-// =============================================================================
-// Render Resume
-// =============================================================================
+// Render the resume
 #show: cvinit.with(author: name, title: title)
 
 #render-basic-info(name: name, title: title, location: location, email: email, phone: phone, url: url, profiles: profiles)

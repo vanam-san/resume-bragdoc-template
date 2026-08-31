@@ -1,14 +1,7 @@
-// =============================================================================
-// functions.typ - Shared Template Functions (Resume + Brag Document)
-// =============================================================================
+// Shared formatting and layout functions for both resume and brag document.
 // Based on imprecv: https://github.com/jskherman/imprecv
-// Single shared functions file for both resume and brag document templates.
-// =============================================================================
 
-// =============================================================================
-// Date Range Formatter
-// =============================================================================
-// Displays start and end dates with an en dash (e.g., "Mar 2025 – Mar 2026")
+// Formats a date range with an en dash (e.g., "Mar 2025 – Mar 2026").
 
 #let daterange_short(start, end) = {
   if start != "" and end != "" {
@@ -22,10 +15,7 @@
   }
 }
 
-// =============================================================================
-// Document Style Rules
-// =============================================================================
-// Global text, paragraph, and list styles
+// Sets global text font, list spacing, and paragraph leading.
 
 #let setrules(doc) = {
   set text(
@@ -45,10 +35,7 @@
   doc
 }
 
-// =============================================================================
-// Show Rules (Heading Styles)
-// =============================================================================
-// Heading level 1 and 2 display rules
+// Defines heading display rules for level 1 (large uppercase) and level 2 (with rule).
 
 #let showrules(doc) = {
   show heading.where(level: 2): it => block(width: 100%)[
@@ -69,9 +56,7 @@
   doc
 }
 
-// =============================================================================
-// Document Initialization
-// =============================================================================
+// Initializes document: page size, margins, footer, and applies styles.
 // Usage: #show: cvinit.with(author: name, title: "...", numbering: "1")
 
 #let cvinit(numbering: none, author: none, title: none, doc) = {
@@ -109,11 +94,7 @@
   doc
 }
 
-// =============================================================================
-// HEADER / BASIC INFO
-// =============================================================================
-// Resume: Name, Title, Contact Info, LinkedIn/Profiles
-// Bragdoc: Name, Title, Review Period
+// Renders centered header with name, title, and contact info separated by diamond symbols.
 
 #let render-basic-info(
   name: "",
@@ -192,9 +173,7 @@
   }
 }
 
-// =============================================================================
-// SUMMARY SECTION (Resume)
-// =============================================================================
+// Renders the "Summary" section with a brief professional overview.
 
 #let render-summary(summary) = {
   if summary == "" { return }
@@ -204,9 +183,7 @@
   ]
 }
 
-// =============================================================================
-// EDUCATION SECTION (Resume)
-// =============================================================================
+// Renders the "Education" section with institution, degree, and date range.
 
 #let render-education(educations) = {
   if educations.len() == 0 { return }
@@ -234,9 +211,7 @@
   ]
 }
 
-// =============================================================================
-// WORK EXPERIENCE SECTION (Resume)
-// =============================================================================
+// Renders the "Experience" section with companies, positions, and bullet highlights.
 
 #let render-work(works) = {
   if works.len() == 0 { return }
@@ -272,9 +247,7 @@
   ]
 }
 
-// =============================================================================
-// WORK EXPERIENCE & ACCOMPLISHMENTS SECTION (Bragdoc)
-// =============================================================================
+// Renders "Work Experience & Accomplishments" with role titles and impact items.
 
 #let render-work-accomplishments(companies) = {
   if companies.len() == 0 { return }
@@ -313,9 +286,7 @@
   ]
 }
 
-// =============================================================================
-// MAJOR ACCOMPLISHMENTS SECTION (Bragdoc)
-// =============================================================================
+// Renders "Major Accomplishments" with what/why/impact/collaborators/date fields.
 
 #let render-accomplishments(accomplishments) = {
   if accomplishments.len() == 0 { return }
@@ -335,9 +306,7 @@
   ]
 }
 
-// =============================================================================
-// GOALS & FOCUS AREAS SECTION (Bragdoc)
-// =============================================================================
+// Renders "Goals & Focus Areas" with two bulleted lists.
 
 #let render-goals(goals, focus-areas) = {
   if goals.len() == 0 and focus-areas.len() == 0 { return }
@@ -358,9 +327,7 @@
   ]
 }
 
-// =============================================================================
-// COLLABORATION & CROSS-FUNCTIONAL WORK SECTION (Bragdoc)
-// =============================================================================
+// Renders "Collaboration & Cross-Functional Work" with partner and contribution.
 
 #let render-collaboration(collaborations) = {
   if collaborations.len() == 0 { return }
@@ -373,9 +340,7 @@
   ]
 }
 
-// =============================================================================
-// SKILLS & GROWTH SECTION (Bragdoc)
-// =============================================================================
+// Renders "Skills Developed & Growth" with skills and challenges lists.
 
 #let render-skills(skills, challenges) = {
   block[
@@ -395,9 +360,7 @@
   ]
 }
 
-// =============================================================================
-// FEEDBACK & RECOGNITION SECTION (Bragdoc)
-// =============================================================================
+// Renders "Positive Feedback & Recognition" with quoted feedback entries.
 
 #let render-feedback(feedback-items) = {
   if feedback-items.len() == 0 { return }
@@ -412,9 +375,7 @@
   ]
 }
 
-// =============================================================================
-// PROJECTS SECTION (Resume)
-// =============================================================================
+// Renders the "Projects" section with linked names, roles, and highlights.
 
 #let render-project(projects) = {
   if projects.len() == 0 { return }
@@ -441,9 +402,7 @@
   ]
 }
 
-// =============================================================================
-// PROJECTS SECTION (Bragdoc - extended with metrics)
-// =============================================================================
+// Renders "Projects & Initiatives" with status, roles, highlights, and metrics.
 
 #let render-bragdoc-projects(projects) = {
   if projects.len() == 0 { return }
@@ -475,9 +434,7 @@
   ]
 }
 
-// =============================================================================
-// CUSTOM SECTION (Resume - Skills, Languages, etc.)
-// =============================================================================
+// Renders a custom titled section with bold summary + description pairs (e.g., skills).
 
 #let render-custom(custom_section) = {
   block[
@@ -488,9 +445,7 @@
   ]
 }
 
-// =============================================================================
-// METRICS SECTION (Bragdoc)
-// =============================================================================
+// Renders "Metrics & Impact" with label, value, and description.
 
 #let render-metrics(metrics) = {
   if metrics.len() == 0 { return }
@@ -505,9 +460,7 @@
   ]
 }
 
-// =============================================================================
-// BUILDER HELPERS (Bragdoc)
-// =============================================================================
+// Builder helpers for constructing brag document data entries.
 
 #let role-entry(
   title: "",

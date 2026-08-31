@@ -1,22 +1,15 @@
-// bragdoc.typ - Public Brag Document (Template)
-// Edit data below to update brag document. Formatting is in functions.typ.
-//
-// Content sourced (verbatim, satirical) from:
-// https://www.reddit.com/r/recruitinghell/comments/qhg5jo/this_resume_got_me_an_interview/
-// Mirrors resume.typ for the same person.
+// Brag document data and entry point. Edit this file to update content.
+// Formatting functions are in functions.typ.
+// Sample data is satirical - replace with your own career information.
 
 #import "functions.typ": cvinit, render-header, render-goals, render-work-accomplishments, render-accomplishments, render-collaboration, render-skills, render-feedback, render-bragdoc-projects, render-metrics, company-entry, role-entry, role-accomplishment, accomplishment, collaboration, feedback-entry, bragdoc-project-entry, metric-entry
 
-// =============================================================================
-// Personal Information
-// =============================================================================
+// Personal info - update with your details
 #let name = "YOUR NAME"
 #let title = "Senior Full Stack Engineer"
 #let review-period = "May 2011 – Present"
 
-// =============================================================================
-// Goals & Focus Areas
-// =============================================================================
+// Goals and focus areas for the review period
 #let goals = (
   "Scale news feed infrastructure to serve more users on BlockChain",
   "Improve page load performance by another 69%",
@@ -31,10 +24,8 @@
   "Frontend performance and UI standardization",
 )
 
-// =============================================================================
-// Work Experience & Accomplishments
-// =============================================================================
-// Companies and roles mirror resume.typ exactly.
+// Work experience with structured accomplishments per role.
+// Keep company names and roles in sync with resume.typ.
 #let companies = (
   company-entry(
     name: "Instagram",
@@ -192,9 +183,7 @@
   // Add more companies as needed
 )
 
-// =============================================================================
-// Major Accomplishments (Cross-Company / Standalone)
-// =============================================================================
+// Major cross-company or standalone accomplishments
 #let accomplishments = (
   accomplishment(
     title: "News Feed Infrastructure (Instagram)",
@@ -238,9 +227,7 @@
   ),
 )
 
-// =============================================================================
-// Collaboration & Cross-Functional Work
-// =============================================================================
+// Cross-functional collaboration entries
 #let collaborations = (
   collaboration(
     partner: "Web App Team (Instagram)",
@@ -260,9 +247,7 @@
   ),
 )
 
-// =============================================================================
-// Skills Developed & Growth
-// =============================================================================
+// New skills learned and challenges overcome
 #let skills = (
   "Mastered JavaScript, TypeScript, Node.js, and C++ across fintech, health, and adult entertainment",
   "Deepened expertise in React AI and server-side larceny algorithms",
@@ -280,9 +265,7 @@
   "Managed an intern team health incident (60% infection rate)",
 )
 
-// =============================================================================
-// Positive Feedback & Recognition
-// =============================================================================
+// Positive feedback and recognition quotes
 #let feedback-items = (
   feedback-entry(
     quote: "Built the news feed infrastructure on BlockChain like a legend.",
@@ -311,9 +294,7 @@
   ),
 )
 
-// =============================================================================
-// Projects & Initiatives
-// =============================================================================
+// Projects with metrics, status, and roles
 #let projects = (
   bragdoc-project-entry(
     name: "News Feed Infrastructure (Instagram)",
@@ -385,9 +366,7 @@
   ),
 )
 
-// =============================================================================
-// Metrics & Impact
-// =============================================================================
+// Quantified impact metrics
 #let metrics = (
   metric-entry(
     label: "Page Load Improvement",
@@ -441,9 +420,7 @@
   ),
 )
 
-// =============================================================================
-// Render Brag Document
-// =============================================================================
+// Render the brag document
 #show: cvinit.with(author: name, title: name + " - Brag Document", numbering: "1")
 
 #render-header(name: name, title: title, review-period: review-period)
