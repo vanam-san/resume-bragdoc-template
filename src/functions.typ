@@ -1,7 +1,14 @@
-// Shared formatting and layout functions for both resume and brag document.
+// =============================================================================
+// functions.typ - Shared Template Functions (Resume + Brag Document)
+// =============================================================================
 // Based on imprecv: https://github.com/jskherman/imprecv
+// Single shared functions file for both resume and brag document templates.
+// =============================================================================
 
-// Formats a date range with an en dash (e.g., "Mar 2025 – Mar 2026").
+// =============================================================================
+// Date Range Formatter
+// =============================================================================
+// Displays start and end dates with an en dash (e.g., "Mar 2025 – Mar 2026")
 
 #let daterange_short(start, end) = {
   if start != "" and end != "" {
@@ -15,7 +22,31 @@
   }
 }
 
-// Sets global text font, list spacing, and paragraph leading.
+// =============================================================================
+// Bold Markup Parser
+// =============================================================================
+// Converts *bold* syntax in strings to properly styled Typst content.
+// Usage: #parse-bold("Drove a *69% improvement* in deployment")
+
+#let parse-bold(text-str) = {
+  let parts = text-str.split("*")
+  let result = ()
+  for i in range(parts.len()) {
+    let part = parts.at(i)
+    if part == "" { continue }
+    if calc.rem(i, 2) == 1 {
+      result.push(text(weight: "bold")[#part])
+    } else {
+      result.push([#part])
+    }
+  }
+  result.join()
+}
+
+// =============================================================================
+// Document Style Rules
+// =============================================================================
+// Global text, paragraph, and list styles
 
 #let setrules(doc) = {
   set text(
@@ -35,20 +66,33 @@
   doc
 }
 
-// Defines heading display rules for level 1 (large uppercase) and level 2 (with rule).
+// =============================================================================
+// Show Rules (Heading Styles)
+// =============================================================================
+// Heading level 1 and 2 display rules
 
 #let showrules(doc) = {
   show heading.where(level: 2): it => block(width: 100%)[
     #v(-2pt)
     #set align(left)
-    #set text(font: "Libertinus Serif", size: 1em, weight: "bold", fill: rgb("#1f3a5f"))
+    #set text(
+      font: "Libertinus Serif",
+      size: 1em,
+      weight: "bold",
+      fill: rgb("#1f3a5f"),
+    )
     #upper(it.body)
     #v(-0.75em) #line(length: 100%, stroke: 1pt + rgb("#1f3a5f"))
     #v(-2pt)
   ]
 
   show heading.where(level: 1): it => block(width: 100%)[
-    #set text(font: "Libertinus Serif", size: 1.5em, weight: "bold", fill: rgb("#1f3a5f"))
+    #set text(
+      font: "Libertinus Serif",
+      size: 1.5em,
+      weight: "bold",
+      fill: rgb("#1f3a5f"),
+    )
     #upper(it.body)
     #v(0pt)
   ]
@@ -56,7 +100,9 @@
   doc
 }
 
-// Initializes document: page size, margins, footer, and applies styles.
+// =============================================================================
+// Document Initialization
+// =============================================================================
 // Usage: #show: cvinit.with(author: name, title: "...", numbering: "1")
 
 #let cvinit(numbering: none, author: none, title: none, doc) = {
@@ -94,7 +140,11 @@
   doc
 }
 
-// Renders centered header with name, title, and contact info separated by diamond symbols.
+// =============================================================================
+// HEADER / BASIC INFO
+// =============================================================================
+// Resume: Name, Title, Contact Info, LinkedIn/Profiles
+// Bragdoc: Name, Title, Review Period
 
 #let render-basic-info(
   name: "",
@@ -126,7 +176,11 @@
       if email != "" { link("mailto:" + email)[#email] },
       if url != "" { link("https://" + url)[#url] },
     )
-    #items.filter(x => x != none).join([#sym.space.en #sym.diamond.filled #sym.space.en])
+    #(
+      items
+        .filter(x => x != none)
+        .join([#sym.space.en #sym.diamond.filled #sym.space.en])
+    )
     #if profiles.len() > 0 {
       sym.space.en
       sym.diamond.filled
@@ -173,71 +227,109 @@
   }
 }
 
-// Renders the "Summary" section with a brief professional overview.
+// =============================================================================
+// SUMMARY SECTION (Resume)
+// =============================================================================
 
 #let render-summary(summary) = {
   if summary == "" { return }
   block[
     == Summary
-    #par[#summary]
+    #par[#parse-bold(summary)]
   ]
 }
 
-// Renders the "Education" section with institution, degree, and date range.
+// =============================================================================
+// EDUCATION SECTION (Resume)
+// =============================================================================
 
 #let render-education(educations) = {
   if educations.len() == 0 { return }
+  let valid-educations = educations.filter(e => e.institution != "" or e.area != "" or e.studyType != "")
+  if valid-educations.len() == 0 { return }
   block[
     == Education
-    #for edu in educations {
+    #for edu in valid-educations {
       let area_str = if edu.area != "" { " in " + edu.area } else { "" }
+      let study-display = if edu.studyType != "" or area_str != "" { [#text(style: "italic")[#edu.studyType#area_str] #h(1fr)] } else { [] }
 
+      // Robust courses handling: supports "" , "single course", ("a","b"), or ()
+      let courses-raw = edu.at("courses", default: ())
+      let valid-courses = if type(courses-raw) == str {
+        if courses-raw != "" { (courses-raw,) } else { () }
+      } else {
+        courses-raw.filter(c => c != "" and c != none)
+      }
       let edu-items = ""
-      if edu.courses.len() > 0 {
-        edu-items = edu-items + "- *Courses*: " + edu.courses.join(", ")
+      if valid-courses.len() > 0 {
+        edu-items = edu-items + "- *Courses*: " + valid-courses.join(", ")
+      }
+      // Optional score if present and non-empty
+      let score-raw = edu.at("score", default: "")
+      if score-raw != "" and score-raw != none {
+        if edu-items != "" { edu-items = edu-items + "\n" }
+        edu-items = edu-items + "- *Score*: " + score-raw
       }
 
+      let date-line = daterange_short(edu.at("startDate", default: ""), edu.at("endDate", default: ""))
+
       block(width: 100%, above: 0.625em)[
-        #if edu.url != "" [
+        #if edu.at("url", default: "") != "" [
           *#link("https://" + edu.url)[#edu.institution]* #h(1fr) \
-        ] else [
+        ] else if edu.institution != "" [
           *#edu.institution* #h(1fr) \
         ]
-        #text(style: "italic")[#edu.studyType#area_str] #h(1fr)
-        #daterange_short(edu.startDate, edu.endDate) \
-        #eval(edu-items, mode: "markup")
+        #if study-display != [] { study-display }
+        #if date-line != [] { [#date-line \ ] }
+        #if edu-items != "" { eval(edu-items, mode: "markup") }
       ]
     }
   ]
 }
 
-// Renders the "Experience" section with companies, positions, and bullet highlights.
+// =============================================================================
+// WORK EXPERIENCE SECTION (Resume)
+// =============================================================================
 
 #let render-work(works) = {
   if works.len() == 0 { return }
+  let valid-works = works.filter(w => w.at("name", default: "") != "")
+  if valid-works.len() == 0 { return }
   block[
     == Experience
-    #for w in works {
+    #for w in valid-works {
       let company_block = block(width: 100%, above: 0.625em)[
-        #if w.url != "" [
+        #if w.at("url", default: "") != "" [
           *#link("https://" + w.url)[#w.name]* #h(1fr)
         ] else [
           *#w.name* #h(1fr)
         ]
-        #if w.location != "" [#w.location]
+        #if w.at("location", default: "") != "" [#w.location]
         \
       ]
 
       let position_blocks = ()
       for p in w.positions {
+        if p.at("position", default: "") == "" and p.at("highlights", default: ()).len() == 0 { continue }
+        let valid-highlights = p.at("highlights", default: ()).filter(h => h != "" and h != none)
+        let has-position = p.at("position", default: "") != ""
+        let has-dates = p.at("startDate", default: "") != "" or p.at("endDate", default: "") != ""
         position_blocks.push(
           block(width: 100%, above: 0.375em, below: 1.25em)[
-            #text(style: "italic", weight: "bold", fill: rgb("#1f3a5f"))[#p.position] #h(1fr)
-            #daterange_short(p.startDate, p.endDate) \
-            #for hi in p.highlights [
-              - #hi
+            #if has-position {
+              text(
+                style: "italic",
+                weight: "bold",
+                fill: rgb("#1f3a5f"),
+              )[#p.position] 
+              h(1fr)
+            }
+            #if has-position or has-dates { daterange_short(p.at("startDate", default: ""), p.at("endDate", default: "")) }
+            #if has-position or has-dates { [\ ] }
+            #for hi in valid-highlights [
+              - #parse-bold(hi)
             ]
-          ]
+          ],
         )
       }
 
@@ -247,36 +339,51 @@
   ]
 }
 
-// Renders "Work Experience & Accomplishments" with role titles and impact items.
+// =============================================================================
+// WORK EXPERIENCE & ACCOMPLISHMENTS SECTION (Bragdoc)
+// =============================================================================
 
 #let render-work-accomplishments(companies) = {
   if companies.len() == 0 { return }
+  let valid-companies = companies.filter(c => c.at("name", default: "") != "")
+  if valid-companies.len() == 0 { return }
   block[
     == Work Experience & Accomplishments
 
-    #for company in companies {
+    #for company in valid-companies {
       let company_block = block(width: 100%, above: 0.625em)[
-        #if company.url != "" [
+        #if company.at("url", default: "") != "" [
           *#link("https://" + company.url)[#company.name]* #h(1fr)
         ] else [
           *#company.name* #h(1fr)
         ]
-        #if company.location != "" [#company.location]
+        #if company.at("location", default: "") != "" [#company.location]
         \
       ]
 
       let role_blocks = ()
       for role in company.roles {
+        if role.at("title", default: "") == "" and role.at("accomplishments", default: ()).len() == 0 { continue }
+        let valid-accs = role.at("accomplishments", default: ()).filter(a => a.at("title", default: "") != "" or a.at("description", default: "") != "" or a.at("impact", default: "") != "")
         role_blocks.push(
           block(width: 100%, above: 0.375em, below: 1.25em)[
-            #text(style: "italic", weight: "bold", fill: rgb("#1f3a5f"))[#role.title] #h(1fr)
-            #daterange_short(role.startDate, role.endDate) \
-            #for acc in role.accomplishments [
+            #if role.at("title", default: "") != "" {
+              text(
+                style: "italic",
+                weight: "bold",
+                fill: rgb("#1f3a5f"),
+              )[#role.title] 
+              h(1fr)
+            }
+            #daterange_short(role.at("startDate", default: ""), role.at("endDate", default: "")) \
+            #for acc in valid-accs [
               #block(above: 0.75em)[
-                - *#acc.title:* #acc.description #text(style: "italic")[(#acc.impact)]
+                - #if acc.at("title", default: "") != "" { text(weight: "bold")[#acc.title:] + [ ] }
+                  #if acc.at("description", default: "") != "" { parse-bold(acc.description) + [ ] }
+                  #if acc.at("impact", default: "") != "" { text(style: "italic")[(#parse-bold(acc.impact))] }
               ]
             ]
-          ]
+          ],
         )
       }
 
@@ -286,181 +393,256 @@
   ]
 }
 
-// Renders "Major Accomplishments" with what/why/impact/collaborators/date fields.
+// =============================================================================
+// MAJOR ACCOMPLISHMENTS SECTION (Bragdoc)
+// =============================================================================
 
 #let render-accomplishments(accomplishments) = {
   if accomplishments.len() == 0 { return }
+  let valid-accs = accomplishments.filter(a => a.at("title", default: "") != "" or a.at("what", default: "") != "" or a.at("impact", default: "") != "")
+  if valid-accs.len() == 0 { return }
   block[
     == Major Accomplishments
 
-    #for acc in accomplishments {
+    #for acc in valid-accs {
       block(width: 100%, above: 0.25em, below: 1.25em)[
-        #text(weight: "bold", fill: rgb("#1f3a5f"))[#acc.title] \
-        - *What I did:* #acc.what
-        - *Why it mattered:* #acc.why
-        - *Impact:* #acc.impact
-        - *Who I worked with:* #acc.collaborators
-        - *Date:* #acc.date
+        #if acc.at("title", default: "") != "" { text(weight: "bold", fill: rgb("#1f3a5f"))[#acc.title] + [\ ] }
+        #if acc.at("what", default: "") != "" [ - *What I did:* #parse-bold(acc.what) ]
+        #if acc.at("why", default: "") != "" [ - *Why it mattered:* #parse-bold(acc.why) ]
+        #if acc.at("impact", default: "") != "" [ - *Impact:* #parse-bold(acc.impact) ]
+        #if acc.at("collaborators", default: "") != "" [ - *Who I worked with:* #acc.collaborators ]
+        #if acc.at("date", default: "") != "" [ - *Date:* #acc.date ]
       ]
     }
   ]
 }
 
-// Renders "Goals & Focus Areas" with two bulleted lists.
+// =============================================================================
+// GOALS & FOCUS AREAS SECTION (Bragdoc)
+// =============================================================================
 
 #let render-goals(goals, focus-areas) = {
-  if goals.len() == 0 and focus-areas.len() == 0 { return }
+  let valid-goals = goals.filter(g => g != "" and g != none)
+  let valid-areas = focus-areas.filter(a => a != "" and a != none)
+  if valid-goals.len() == 0 and valid-areas.len() == 0 { return }
   block[
     == Goals & Focus Areas
 
-    *What were your main goals this period?*
-    #for goal in goals [
-      - #goal
-    ]
+    #if valid-goals.len() > 0 {
+      [*What were your main goals this period?*]
+      for goal in valid-goals [
+        - #parse-bold(goal)
+      ]
+    }
 
-    #v(6pt)
+    #if valid-goals.len() > 0 and valid-areas.len() > 0 { v(6pt) }
 
-    *What areas did you focus on?*
-    #for area in focus-areas [
-      - #area
-    ]
+    #if valid-areas.len() > 0 {
+      [*What areas did you focus on?*]
+      for area in valid-areas [
+        - #parse-bold(area)
+      ]
+    }
   ]
 }
 
-// Renders "Collaboration & Cross-Functional Work" with partner and contribution.
+// =============================================================================
+// COLLABORATION & CROSS-FUNCTIONAL WORK SECTION (Bragdoc)
+// =============================================================================
 
 #let render-collaboration(collaborations) = {
   if collaborations.len() == 0 { return }
+  let valid-collabs = collaborations.filter(c => c.at("partner", default: "") != "" or c.at("contribution", default: "") != "")
+  if valid-collabs.len() == 0 { return }
   block[
     == Collaboration & Cross-Functional Work
 
-    #for collab in collaborations [
-      - *Partnered with #collab.partner:* #collab.contribution
+    #for collab in valid-collabs [
+      - #if collab.at("partner", default: "") != "" { text(weight: "bold")[Partnered with #collab.partner:] + [ ] }
+        #if collab.at("contribution", default: "") != "" { parse-bold(collab.contribution) }
     ]
   ]
 }
 
-// Renders "Skills Developed & Growth" with skills and challenges lists.
+// =============================================================================
+// SKILLS & GROWTH SECTION (Bragdoc)
+// =============================================================================
 
 #let render-skills(skills, challenges) = {
+  let valid-skills = skills.filter(s => s != "" and s != none)
+  let valid-challenges = challenges.filter(c => c != "" and c != none)
+  if valid-skills.len() == 0 and valid-challenges.len() == 0 { return }
   block[
     == Skills Developed & Growth
 
-    *What new skills did you learn or improve?*
-    #for skill in skills [
-      - #skill
-    ]
+    #if valid-skills.len() > 0 {
+      [*What new skills did you learn or improve?*]
+      for skill in valid-skills [
+        - #parse-bold(skill)
+      ]
+    }
 
-    #v(6pt)
+    #if valid-skills.len() > 0 and valid-challenges.len() > 0 { v(6pt) }
 
-    *What challenges did you overcome?*
-    #for challenge in challenges [
-      - #challenge
-    ]
+    #if valid-challenges.len() > 0 {
+      [*What challenges did you overcome?*]
+      for challenge in valid-challenges [
+        - #parse-bold(challenge)
+      ]
+    }
   ]
 }
 
-// Renders "Positive Feedback & Recognition" with quoted feedback entries.
+// =============================================================================
+// FEEDBACK & RECOGNITION SECTION (Bragdoc)
+// =============================================================================
 
 #let render-feedback(feedback-items) = {
   if feedback-items.len() == 0 { return }
+  let valid-items = feedback-items.filter(i => i.at("quote", default: "") != "" or i.at("person", default: "") != "")
+  if valid-items.len() == 0 { return }
   block[
     == Positive Feedback & Recognition
 
-    #for item in feedback-items [
+    #for item in valid-items [
       #block(above: 0.625em)[
-        - "#item.quote" - #item.person, #item.date
+        - #if item.at("quote", default: "") != "" { [#parse-bold(item.quote)] } else { [ ] }
+          #if item.at("person", default: "") != "" or item.at("date", default: "") != "" {
+            [ — ]
+            if item.at("person", default: "") != "" { [#item.person] }
+            if item.at("person", default: "") != "" and item.at("date", default: "") != "" { [, ] }
+            if item.at("date", default: "") != "" { [#item.date] }
+          }
       ]
     ]
   ]
 }
 
-// Renders the "Projects" section with linked names, roles, and highlights.
+// =============================================================================
+// PROJECTS SECTION (Resume)
+// =============================================================================
 
 #let render-project(projects) = {
   if projects.len() == 0 { return }
+  let valid-projects = projects.filter(p => p.at("name", default: "") != "")
+  if valid-projects.len() == 0 { return }
   block[
     == Projects
-    #for project in projects {
+    #for project in valid-projects {
+      let valid-roles = project.at("roles", default: ()).filter(r => r != "" and r != none)
+      let valid-highlights = project.at("highlights", default: ()).filter(h => h != "" and h != none)
       block(width: 100%, above: 0.625em)[
-        #if project.url != "" [
+        #if project.at("url", default: "") != "" [
           *#link("https://" + project.url)[#project.name]* \
         ] else [
           *#project.name* \
         ]
-        #if project.roles.len() > 0 [
-          #text(style: "italic")[#project.roles.join(", ")] #h(1fr)
+        #if valid-roles.len() > 0 [
+          #text(style: "italic")[#valid-roles.join(", ")] #h(1fr)
         ]
-        #if project.startDate != "" or project.endDate != "" [
-          #daterange_short(project.startDate, project.endDate) \
+        #if project.at("startDate", default: "") != "" or project.at("endDate", default: "") != "" [
+          #daterange_short(project.at("startDate", default: ""), project.at("endDate", default: "")) \
         ]
-        #for hi in project.highlights [
-          - #hi
+        #for hi in valid-highlights [
+          - #parse-bold(hi)
         ]
       ]
     }
   ]
 }
 
-// Renders "Projects & Initiatives" with status, roles, highlights, and metrics.
+// =============================================================================
+// PROJECTS SECTION (Bragdoc - extended with metrics)
+// =============================================================================
 
 #let render-bragdoc-projects(projects) = {
   if projects.len() == 0 { return }
+  let valid-projects = projects.filter(p => p.at("name", default: "") != "")
+  if valid-projects.len() == 0 { return }
   block[
     == Projects & Initiatives
 
-    #for project in projects {
+    #for project in valid-projects {
+      let valid-roles = project.at("roles", default: ()).filter(r => r != "" and r != none)
+      let valid-highlights = project.at("highlights", default: ()).filter(h => h != "" and h != none)
+      let valid-metrics = project.at("metrics", default: ()).filter(m => m != "" and m != none)
+      let has-status = project.at("status", default: "") != ""
+      let has-date = project.at("date", default: "") != ""
       block(width: 100%, above: 0.25em, below: 1.25em)[
-        #if project.url != "" [
+        #if project.at("url", default: "") != "" [
           *#link("https://" + project.url)[#project.name]* \
         ] else [
           *#project.name* \
         ]
-        #text(fill: rgb("#555555"), size: 9pt)[#project.status #h(2pt) #project.date] \
-        #if project.roles.len() > 0 [
-          #text(style: "italic")[#project.roles.join(", ")] \
+        #if has-status or has-date {
+          text(fill: rgb("#555555"), size: 9pt)[
+            #if has-status [#project.status]
+            #if has-status and has-date [#h(2pt)]
+            #if has-date [#project.date]
+          ]
+          [\ ]
+        }
+        #if valid-roles.len() > 0 [
+          #text(style: "italic")[#valid-roles.join(", ")] \
         ]
-        #if project.description != "" [
+        #if project.at("description", default: "") != "" [
           #project.description \
         ]
-        #for hi in project.highlights [
-          - #hi
+        #for hi in valid-highlights [
+          - #parse-bold(hi)
         ]
-        #if project.metrics.len() > 0 [
-          - *Key Metrics:* #project.metrics.join(", ")
+        #if valid-metrics.len() > 0 [
+          - #text(weight: "bold")[Key Metrics:] #parse-bold(
+              valid-metrics.join(", "),
+            )
         ]
       ]
     }
   ]
 }
 
-// Renders a custom titled section with bold summary + description pairs (e.g., skills).
+// =============================================================================
+// CUSTOM SECTION (Resume - Skills, Languages, etc.)
+// =============================================================================
 
 #let render-custom(custom_section) = {
+  if custom_section.at("title", default: "") == "" and custom_section.at("highlights", default: ()).len() == 0 { return }
+  let valid-highlights = custom_section.at("highlights", default: ()).filter(h => h.at("summary", default: "") != "" or h.at("description", default: "") != "")
+  if valid-highlights.len() == 0 and custom_section.at("title", default: "") == "" { return }
   block[
-    == #custom_section.title
-    #for highlight in custom_section.highlights [
-      - *#highlight.summary*: #highlight.description
+    #if custom_section.at("title", default: "") != "" [ == #custom_section.title ]
+    #for highlight in valid-highlights [
+      - #if highlight.at("summary", default: "") != "" { [*#highlight.summary*] }
+        #if highlight.at("summary", default: "") != "" and highlight.at("description", default: "") != "" { [: ] }
+        #if highlight.at("description", default: "") != "" { [#highlight.description] }
     ]
   ]
 }
 
-// Renders "Metrics & Impact" with label, value, and description.
+// =============================================================================
+// METRICS SECTION (Bragdoc)
+// =============================================================================
 
 #let render-metrics(metrics) = {
   if metrics.len() == 0 { return }
+  let valid-metrics = metrics.filter(m => m.at("label", default: "") != "" or m.at("value", default: "") != "" or m.at("description", default: "") != "")
+  if valid-metrics.len() == 0 { return }
   block[
     == Metrics & Impact
 
-    #for metric in metrics [
+    #for metric in valid-metrics [
       #block(above: 0.625em)[
-        - *#metric.label*: #metric.value #h(2pt) #text(style: "italic")[#metric.description]
+        - #if metric.at("label", default: "") != "" { text(weight: "bold")[#metric.label:] + [ ] }
+          #if metric.at("value", default: "") != "" { parse-bold(metric.value) + h(2pt) }
+          #if metric.at("description", default: "") != "" { text(style: "italic")[#parse-bold(metric.description)] }
       ]
     ]
   ]
 }
 
-// Builder helpers for constructing brag document data entries.
+// =============================================================================
+// BUILDER HELPERS (Bragdoc)
+// =============================================================================
 
 #let role-entry(
   title: "",
