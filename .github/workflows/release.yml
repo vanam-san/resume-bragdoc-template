@@ -2,18 +2,19 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v1.*'
+    branches:
+      - master
+
   workflow_dispatch:
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
@@ -26,59 +27,116 @@ jobs:
 
       - name: Generate date string
         id: date
-        run: echo "date=$(date +'%d%m%Y')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%d%m%Y')" >> "$GITHUB_OUTPUT"
+
+      - name: Calculate next release tag
+        id: version
+        shell: bash
+        run: |
+          git fetch --tags --force
+
+          LATEST_TAG=$(git tag --list 'v1.*' --sort=-version:refname | head -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_TAG="v1.0"
+          else
+            VERSION="${LATEST_TAG#v1.}"
+            NEXT_VERSION=$((VERSION + 1))
+            NEXT_TAG="v1.${NEXT_VERSION}"
+          fi
+
+          echo "Latest tag: ${LATEST_TAG:-none}"
+          echo "Next tag: $NEXT_TAG"
+
+          echo "tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Get previous release tag
         id: prev-tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
-          if [ "$PREV_TAG" = "null" ] || [ -z "$PREV_TAG" ]; then
-            PREV_TAG=""
+          git fetch --tags --force
+
+          PREV_TAG=$(git tag --list 'v1.*' --sort=-version:refname | head -n 1)
+
+          if [ "$PREV_TAG" = "${{ steps.version.outputs.tag }}" ]; then
+            PREV_TAG=$(git tag --list 'v1.*' --sort=-version:refname | sed -n '2p')
           fi
-          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+          echo "Previous tag: ${PREV_TAG:-none}"
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Generate changelog
         id: changelog
+        shell: bash
         run: |
-          if [ -n "${{ steps.prev-tag.outputs.prev_tag }}" ]; then
-            RANGE="${{ steps.prev-tag.outputs.prev_tag }}..HEAD"
+          PREV_TAG="${{ steps.prev-tag.outputs.prev_tag }}"
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
           else
             FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
             RANGE="${FIRST_COMMIT}..HEAD"
           fi
+
           CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$RANGE" --no-merges)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+
+          {
+            echo "changelog<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Compile Resume
         run: |
-          typst compile src/resume.typ src/Resume_${{ steps.date.outputs.date }}.pdf
+          typst compile \
+            src/resume.typ \
+            src/Resume_${{ steps.date.outputs.date }}.pdf
 
       - name: Compile Brag Document
         run: |
-          typst compile src/bragdoc.typ src/Bragdoc_${{ steps.date.outputs.date }}.pdf
+          typst compile \
+            src/bragdoc.typ \
+            src/Bragdoc_${{ steps.date.outputs.date }}.pdf
 
-      - name: Create Release
+      - name: Create release tag
         env:
           GH_TOKEN: ${{ secrets.TYPST_TOKEN }}
-          TAG: "${{ github.ref_name }}"
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.TYPST_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PREV_TAG: ${{ steps.prev-tag.outputs.prev_tag }}
+          DATE: ${{ steps.date.outputs.date }}
+        shell: bash
         run: |
           RELEASE_BODY="## Changes since last release"$'\n\n'
+
           RELEASE_BODY+="${{ steps.changelog.outputs.changelog }}"$'\n\n'
+
           RELEASE_BODY+="---"$'\n'
-          RELEASE_BODY+="**Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prev-tag.outputs.prev_tag }}...${{ github.ref_name }}"
+
+          if [ -n "$PREV_TAG" ]; then
+            RELEASE_BODY+="**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${TAG}"
+          else
+            RELEASE_BODY+="**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/commits/${TAG}"
+          fi
 
           echo "::group::Diagnostics"
-          ls -la src/*.pdf || echo "PDF assets missing"
-          gh auth status || echo "gh authentication failed"
+          ls -la src/*.pdf
+          gh auth status
           echo "::endgroup::"
 
           gh release create "$TAG" \
             --repo="$GITHUB_REPOSITORY" \
-            --title="Release - ${{ github.ref_name }}" \
+            --title="Release - $TAG" \
             --notes "$RELEASE_BODY" \
-            src/Resume_${{ steps.date.outputs.date }}.pdf \
-            src/Bragdoc_${{ steps.date.outputs.date }}.pdf
+            "src/Resume_${DATE}.pdf" \
+            "src/Bragdoc_${DATE}.pdf"
