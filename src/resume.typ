@@ -33,7 +33,7 @@
 )
 
 // Brief professional summary (2-3 sentences max)
-#let summary = "Experienced software engineer with a background of building scalable systems in the fintech, health, and media industries. Expert in JavaScript, TypeScript, Node.js, React AI, and C++ (and powered almost entirely by coffee and the occasional warp-core energy drink)."
+#let summary = "Experienced software engineer with a background of building *scalable systems* in the *fintech, health, and media* industries. Expert in *JavaScript, TypeScript, Node.js, React AI, and C++* (and powered almost entirely by coffee and the occasional warp-core energy drink)."
 
 // Education entries
 #let educations = (
@@ -62,11 +62,11 @@
         startDate: "October 2021",
         endDate: "Present",
         highlights: (
-          "Promoted to Engineering Manager, leading the Web App Team of 6 engineers behind the BlockChain news feed",
-          "Scaled the team to 12 engineers while sustaining a 420fps caffeine-driven delivery velocity",
-          "Drove a 69% improvement in deployment frequency via AI based GraphQL and on-server Ethereum mining",
-          "Managed cross-functional initiative to mine Ethereum on company servers in low Earth orbit, offsetting $2M/year in infrastructure costs",
-          "Kept the entire org fully caffeinated with Antarctican beans ground to 14 nm particles",
+          "Promoted to Engineering Manager, leading the *Web App Team of 6 engineers* behind the *BlockChain news feed*",
+          "Scaled the team to *12 engineers* while sustaining a *420fps* caffeine-driven delivery velocity",
+          "Drove a *69% improvement* in deployment frequency via *AI based GraphQL* and *on-server Ethereum mining*",
+          "Managed cross-functional initiative to mine Ethereum on company servers in low Earth orbit, offsetting *$2M/year* in infrastructure costs",
+          "Kept the entire org fully caffeinated with *Antarctican beans ground to 14 nm particles*",
         ),
       ),
       (
@@ -74,10 +74,10 @@
         startDate: "October 2018",
         endDate: "October 2021",
         highlights: (
-          "Built news feed infrastructure using React for AI on BlockChain",
-          "Optimized web app feed performance through new server-side React larceny AI algorithm to quickly resolve big data pipeline",
-          "Led team of 6 engineers to mine Ethereum on company servers in low Earth orbit",
-          "Team coffee maker - ensured team of 6 was fully caffeinated with Antarctican coffee beans ground to 14 nm particles using a miniature ion cannon",
+          "Built *news feed infrastructure* using *React for AI on BlockChain*",
+          "Optimized web app feed performance through new *server-side React larceny AI algorithm* to quickly resolve *big data pipeline*",
+          "Led *team of 6 engineers* to mine Ethereum on company servers in *low Earth orbit*",
+          "Team coffee maker - ensured team of 6 was fully caffeinated with *Antarctican coffee beans ground to 14 nm particles* using a *miniature ion cannon*",
         ),
       ),
     ),
@@ -92,10 +92,10 @@
         startDate: "June 2015",
         endDate: "September 2018",
         highlights: (
-          "Added AI based GraphQL, resulting in 69% faster page loads",
-          "Organized team bonding through company potato sack race resulting in increased team bonding and cohesity",
-          "Rebuilt home display page with virtualized tables and map to provide a buttery-smooth 120fps on screen experience with the design team",
-          "Evangelized and adopted an open-source React UI library",
+          "Added *AI based GraphQL*, resulting in *69% faster page loads*",
+          "Organized team bonding through company potato sack race resulting in increased *team bonding and cohesity*",
+          "Rebuilt home display page with *virtualized tables and map* to provide a buttery-smooth *120fps* on screen experience with the design team",
+          "Evangelized and adopted an *open-source React UI library*",
         ),
       ),
     ),
@@ -110,9 +110,9 @@
         startDate: "June 2013",
         endDate: "September 2015",
         highlights: (
-          "Improved LinkedIn search algorithm efficiency and accuracy through the usage of VoldemortDB, Charizard, and Hadoop",
-          "Tracked down Richard Stallman on IRC and exchanged /msgs (he actually replied!)",
-          "Implemented data quality improvements via deduplication and advanced profile ranking resulting in faster big data with React",
+          "Improved LinkedIn search algorithm *efficiency and accuracy* through the usage of *VoldemortDB, Charizard, and Hadoop*",
+          "Tracked down *Richard Stallman* on IRC and exchanged /msgs (he actually replied!)",
+          "Implemented *data quality improvements* via *deduplication and advanced profile ranking* resulting in *faster big data with React*",
         ),
       ),
     ),
@@ -127,9 +127,9 @@
         startDate: "May 2011",
         endDate: "August 2012",
         highlights: (
-          "Built React based big data pipeline to enhance deployment stability of Microsoft Edge browser on the Blockchain",
-          "Spearheaded the company's annual Star Fleet recruitment rally (gold shirts optional)",
-          "Organized an intern onboarding bootcamp (snacks provided) that improved ramp-up time by 60%",
+          "Built *React based big data pipeline* to enhance *deployment stability* of *Microsoft Edge* browser on the *Blockchain*",
+          "Spearheaded the company's annual *Star Fleet recruitment rally* (gold shirts optional)",
+          "Organized an *intern onboarding bootcamp* (snacks provided) that improved *ramp-up time by 60%*",
         ),
       ),
     ),
@@ -169,8 +169,8 @@
     startDate: "2018",
     endDate: "Present",
     highlights: (
-      "Server-side React larceny AI algorithm for big data pipeline",
-      "Ethereum mining on company servers with a team of 6",
+      "*Server-side React larceny AI algorithm* for *big data pipeline*",
+      "*Ethereum mining* on company servers with a *team of 6*",
     ),
   ),
   // Add more projects as needed
