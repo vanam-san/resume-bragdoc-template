@@ -1,11 +1,20 @@
 name: Release
 
+# Auto-release on every update to master (direct push or PR merge).
+# The workflow computes the next v1.N tag, skips when there is nothing
+# new (no duplicates), and creates a GitHub Release with compiled PDFs
+# and a What's Changed section.
 on:
   push:
     branches:
       - master
 
   workflow_dispatch:
+
+# Serialize releases so two rapid merges can't pick the same tag.
+concurrency:
+  group: release-master
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -20,12 +29,72 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve next version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Opt out of a release for trivial changes.
+          if git log -1 --pretty=%B | grep -qi '\[skip release\]'; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=skip-release-flag" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch --tags origin
+
+          # Re-run guard: HEAD already carries a release tag.
+          if git tag --points-at HEAD | grep -Eq '^v1\.[0-9]+'; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=head-already-tagged" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PREV_TAG=$(git tag --list 'v1.*' | grep -E '^v1\.[0-9]+(\.[0-9]+)?$' | sort -V | tail -n1 || true)
+
+          if [ -z "$PREV_TAG" ]; then
+            NEW_TAG="v1.0"
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
+          else
+            MINOR=$(echo "$PREV_TAG" | sed -E 's/^v1\.([0-9]+).*/\1/')
+            NEW_TAG="v1.$((MINOR + 1))"
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Nothing new since the previous release -> no release.
+          if [ -n "$PREV_TAG" ] && [ "$(git rev-list --count "$RANGE")" = "0" ]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=no-new-commits" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Bump past any tag/release that already exists (never duplicate).
+          TRIES=0
+          while git rev-parse -q --verify "refs/tags/${NEW_TAG}" >/dev/null \
+            || gh release view "$NEW_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; do
+            MINOR=$(echo "$NEW_TAG" | sed -E 's/^v1\.([0-9]+).*/\1/')
+            NEW_TAG="v1.$((MINOR + 1))"
+            TRIES=$((TRIES + 1))
+            if [ "$TRIES" -gt 100 ]; then
+              echo "::error::Could not find a free v1.N tag"
+              exit 1
+            fi
+          done
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
       - name: Setup Typst
+        if: steps.version.outputs.should_release == 'true'
         uses: typst-community/setup-typst@v5
         with:
           typst-version: "0.15.1"
 
       - name: Generate date string
+        if: steps.version.outputs.should_release == 'true'
         id: date
         run: echo "date=$(date +'%d%m%Y')" >> "$GITHUB_OUTPUT"
 
@@ -66,6 +135,7 @@ jobs:
           echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Generate changelog
+        if: steps.version.outputs.should_release == 'true'
         id: changelog
         shell: bash
         run: |
@@ -74,8 +144,7 @@ jobs:
           if [ -n "$PREV_TAG" ]; then
             RANGE="${PREV_TAG}..HEAD"
           else
-            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-            RANGE="${FIRST_COMMIT}..HEAD"
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
           fi
 
           CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$RANGE" --no-merges)

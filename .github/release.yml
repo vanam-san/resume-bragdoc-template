@@ -1,6 +1,35 @@
 changelog:
   categories:
-    - title: Changes Made
+    - title: Breaking Changes
+      labels:
+        - breaking
+        - major
+
+    - title: New Features
+      labels:
+        - feature
+        - enhancement
+        - feat
+
+    - title: Bug Fixes
+      labels:
+        - fix
+        - bugfix
+        - bug
+
+    - title: Documentation
+      labels:
+        - docs
+        - documentation
+
+    - title: Maintenance
+      labels:
+        - chore
+        - refactor
+        - ci
+        - test
+
+    - title: Other Changes
       labels:
         - "*"
       exclude:
