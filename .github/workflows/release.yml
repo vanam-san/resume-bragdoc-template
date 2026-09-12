@@ -132,11 +132,18 @@ jobs:
           fi
 
           NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
+          # GENERATED already contains "## What's Changed" and "**Full Changelog**".
+          # Strip its Full Changelog line so each section is emitted only once:
+          # What's Changed (from API) -> Commits -> single Full Changelog.
+          GENERATED_BODY=$(printf '%s\n' "$GENERATED" | grep -v '^\*\*Full Changelog\*\*' || true)
           {
-            echo "## What's Changed"
-            echo ""
-            if [ -n "$GENERATED" ]; then
-              echo "$GENERATED"
+            if [ -n "$GENERATED_BODY" ]; then
+              echo "$GENERATED_BODY"
+              echo ""
+            else
+              echo "## What's Changed"
+              echo ""
+              echo "- No automated notes."
               echo ""
             fi
             echo "### Commits"
