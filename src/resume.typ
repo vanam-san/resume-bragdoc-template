@@ -173,6 +173,18 @@
       "*Arcade-cabinet hosting* in low Earth orbit with a *team of 6*",
     ),
   ),
+  (
+    name: "Resume & Brag Document Template",
+    url: "github.com/vanam-san/resume-bragdoc-template",
+    roles: ("Typst", "GitHub Actions", "Template Design"),
+    startDate: "2026",
+    endDate: "Present",
+    highlights: (
+      "Built a *reusable Typst template* powering a *resume and brag document* from one shared style system",
+      "*Automated PDF releases* via *GitHub Actions* with auto-incremented *v1.N tags* and What's Changed notes",
+      "*Dogfooded in production*: this resume was compiled by the template itself",
+    ),
+  ),
   // Add more projects as needed
 )
 

@@ -365,6 +365,24 @@
     status: "Shipped",
     date: "2011-2012",
   ),
+  bragdoc-project-entry(
+    name: "Resume & Brag Document Template",
+    url: "github.com/vanam-san/resume-bragdoc-template",
+    description: "Self-hosting Typst template that generates its own release PDFs.",
+    roles: ("Typst", "GitHub Actions", "Template Design"),
+    highlights: (
+      "*Single shared style system* driving the *resume and brag doc* from one codebase",
+      "*Auto-release pipeline* cutting *v1.N releases* with *What's Changed* notes on every merge",
+      "*Dogfooded in production*: *this very document* was built by the template",
+    ),
+    metrics: (
+      "Resume: *2 pages*",
+      "Brag doc: *4 pages*",
+      "Releases: *automated v1.N*",
+    ),
+    status: "Shipped",
+    date: "2026-Present",
+  ),
 )
 
 // Quantified impact metrics
