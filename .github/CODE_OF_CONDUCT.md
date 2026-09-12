@@ -25,4 +25,4 @@ Project maintainers may remove, edit, or reject comments, commits, code, issues,
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, please report it by opening an issue or contacting the maintainers directly.
+If you experience or witness unacceptable behavior, please report it by opening a discussion in the [Discussions tab](https://github.com/vanam-san/resume-bragdoc-template/discussions). Keep reports factual and avoid posting anyone's private information; maintainers will follow up and keep sensitive details confidential.

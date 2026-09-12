@@ -4,6 +4,8 @@ A professional resume and brag document template built with [Typst](https://typs
 
 Sample data is satirical — replace it with your own career information.
 
+<img src="preview-resume.png" width="400" alt="Resume preview"> <img src="preview-bragdoc.png" width="400" alt="Brag document preview">
+
 ## Features
 
 - **Single shared style system** — `functions.typ` powers both documents (typography, colors, headers, footers)
@@ -11,7 +13,7 @@ Sample data is satirical — replace it with your own career information.
 - **Resume sections** — summary, experience, education, skills, projects
 - **Brag document sections** — goals & focus areas, work accomplishments, major accomplishments, collaboration, skills & growth, feedback, projects & initiatives, metrics & impact
 - **Live preview & one-command builds** via `TASKFILE.yml` or plain `typst` CLI
-- **Automated releases** — push a `v1.*` tag to get dated PDFs attached to a GitHub Release
+- **Automated releases** — every merge/push to `master` cuts the next `v1.N` release with dated PDFs and a What's Changed section
 
 ## What's Included
 
@@ -64,7 +66,7 @@ This template includes a lightweight markup parser `parse-bold` (`src/functions.
 
 ### Prerequisites
 
-- [Typst 0.15.1+](https://typst.app/docs/install/) (pinned in `release.yml`)
+- [Typst 0.15.1+](https://typst.app/docs/install/) (CI pins `0.15.1` in `.github/workflows/release.yml`; newer local versions may render slightly differently)
 - [Task](https://taskfile.dev/installation/) — optional, for `task` shortcuts
 
 ### Local Development
@@ -123,7 +125,7 @@ Example diff for a bullet:
 │   ├── resume.pdf           # Compiled resume (preview)
 │   └── bragdoc.pdf          # Compiled brag doc (preview)
 ├── .github/workflows/
-│   └── release.yml          # Builds dated PDFs on v1.* tags
+│   └── release.yml          # Auto-releases dated PDFs on every master update
 ├── TASKFILE.yml             # task compile / task dev shortcuts
 └── README.md
 ```
@@ -144,14 +146,17 @@ Key helpers in `functions.typ`:
 
 ## Releases
 
-Push a tag matching `v1.*` (or run workflow manually) to trigger `release.yml`:
+Every push to `master` (including PR merges) triggers `.github/workflows/release.yml`, which:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+1. Finds the latest `v1.*` tag and creates the next one (`v1.1` → `v1.2`, …).
+2. Compiles `Resume_<tag>_<YYYYMMDD>.pdf` and `Bragdoc_<tag>_<YYYYMMDD>.pdf` into `dist/`.
+3. Creates a GitHub Release with a **What's Changed** section (generated notes per `.github/release.yml` categories + commit list) and attaches both PDFs.
 
-The workflow compiles `Resume_DDMMYYYY.pdf` and `Bragdoc_DDMMYYYY.pdf`, generates a changelog from `git log` since the previous tag, and creates a GitHub Release with both PDFs attached. See `.github/workflows/release.yml:56` and `src/functions.typ:31` for details.
+No duplicates: the workflow skips when `HEAD` is already tagged, when there are no new commits since the previous tag, or when the computed tag is taken (it bumps to the next free tag). Runs are serialized with a `concurrency` group so rapid merges can't race.
+
+To skip a release for a trivial change, include `[skip release]` in the commit message. To cut a release manually, run the workflow via **Actions → Release → Run workflow**.
+
+> Tags use the `v1.<n>` scheme. Stray local tags like `v1.1.0` / `v1.2.0` don't match the increment logic — delete them (`git tag -d v1.1.0 v1.2.0`) to avoid confusion.
 
 ## Contributing
 

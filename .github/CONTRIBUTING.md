@@ -21,8 +21,8 @@ Thanks for your interest in contributing to this template! Here are some guideli
 
 ```bash
 # Clone your fork
-git clone https://github.com/<your-username>/Resume-Bragdoc-Template.git
-cd Resume-Bragdoc-Template
+git clone https://github.com/<your-username>/resume-bragdoc-template.git
+cd resume-bragdoc-template
 
 # Watch for changes (live preview)
 task dev
@@ -43,14 +43,15 @@ typst compile src/bragdoc.typ src/bragdoc.pdf
 
 ### Commit Messages
 
-- Use clear, descriptive commit messages
-- Start with a verb in imperative mood (e.g., "Add", "Fix", "Update")
+- Use [Conventional Commits](https://www.conventionalcommits.org/): `type: subject`
+- Common types: `feat`, `fix`, `docs`, `refactor`, `chore`, `ci`
+- Start the subject with a verb in imperative mood (e.g., "Add", "Fix", "Update")
 - Keep the subject line under 72 characters
 
 Examples:
-- `Add render-metrics function for bragdoc`
-- `Fix date range formatting for empty end dates`
-- `Update README with function reference`
+- `feat: add render-metrics function for bragdoc`
+- `fix: date range formatting for empty end dates`
+- `docs: update README with function reference`
 
 ### Pull Requests
 
@@ -64,6 +65,10 @@ Examples:
 - Use issues to report bugs or suggest features
 - Include steps to reproduce for bug reports
 - Check existing issues before creating a new one
+
+## Releases
+
+Every merge to `master` automatically cuts a `v1.N` release with fresh PDFs (see `.github/workflows/release.yml`). Batch trivial changes where possible, and include `[skip release]` in the commit message to suppress a release for a trivial update.
 
 ## What Can I Contribute?
 
