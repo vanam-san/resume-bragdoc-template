@@ -26,7 +26,7 @@
 // Bold Markup Parser
 // =============================================================================
 // Converts *bold* syntax in strings to properly styled Typst content.
-// Usage: #parse-bold("Drove a *69% improvement* in deployment")
+// Usage: #parse-bold("Drove a *72% improvement* in deployment")
 
 #let parse-bold(text-str) = {
   let parts = text-str.split("*")
@@ -168,30 +168,31 @@
     ]
   }
 
-  block(width: 100%)[
-    #set align(center)
-    #let items = (
-      if location != "" { location },
-      if phone != "" { phone },
-      if email != "" { link("mailto:" + email)[#email] },
-      if url != "" { link("https://" + url)[#url] },
-    )
-    #(
-      items
-        .filter(x => x != none)
-        .join([#sym.space.en #sym.diamond.filled #sym.space.en])
-    )
-    #if profiles.len() > 0 {
-      sym.space.en
-      sym.diamond.filled
-      sym.space.en
-      profiles
-        .map(profile => {
-          link("https://" + profile.url)[#profile.username]
-        })
-        .join([#sym.space.en #sym.diamond.filled #sym.space.en])
-    }
-  ]
+  // Contact line: skip empty fields, join the rest with " | ".
+  let contact-items = (
+    if location != "" { location },
+    if phone != "" { phone },
+    if email != "" { link("mailto:" + email)[#email] },
+    if url != "" { link("https://" + url)[#url] },
+  ).filter(x => x != none)
+  // Profiles: drop nameless entries, plain text when no URL.
+  let profile-items = profiles
+    .filter(p => p.at("username", default: "") != "")
+    .map(p => {
+      if p.at("url", default: "") != "" {
+        link("https://" + p.url)[#p.username]
+      } else {
+        [#p.username]
+      }
+    })
+  let all-items = contact-items + profile-items
+  // Hide the whole line when nothing is left to show.
+  if all-items.len() > 0 {
+    block(width: 100%)[
+      #set align(center)
+      #all-items.join([#sym.space.en | #sym.space.en])
+    ]
+  }
 }
 
 #let render-header(
