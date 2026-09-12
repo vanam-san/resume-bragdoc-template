@@ -1,84 +1,166 @@
 name: Release
 
+# Auto-release on every update to master (direct push or PR merge).
+# The workflow computes the next v1.N tag, skips when there is nothing
+# new (no duplicates), and creates a GitHub Release with compiled PDFs
+# and a What's Changed section.
 on:
   push:
-    tags:
-      - 'v1.*'
+    branches:
+      - master
   workflow_dispatch:
 
+# Serialize releases so two rapid merges can't pick the same tag.
+concurrency:
+  group: release-master
+  cancel-in-progress: false
+
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      - name: Resolve next version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Opt out of a release for trivial changes.
+          if git log -1 --pretty=%B | grep -qi '\[skip release\]'; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=skip-release-flag" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch --tags origin
+
+          # Re-run guard: HEAD already carries a release tag.
+          if git tag --points-at HEAD | grep -Eq '^v1\.[0-9]+'; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=head-already-tagged" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PREV_TAG=$(git tag --list 'v1.*' | grep -E '^v1\.[0-9]+(\.[0-9]+)?$' | sort -V | tail -n1 || true)
+
+          if [ -z "$PREV_TAG" ]; then
+            NEW_TAG="v1.0"
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
+          else
+            MINOR=$(echo "$PREV_TAG" | sed -E 's/^v1\.([0-9]+).*/\1/')
+            NEW_TAG="v1.$((MINOR + 1))"
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Nothing new since the previous release -> no release.
+          if [ -n "$PREV_TAG" ] && [ "$(git rev-list --count "$RANGE")" = "0" ]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=no-new-commits" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Bump past any tag/release that already exists (never duplicate).
+          TRIES=0
+          while git rev-parse -q --verify "refs/tags/${NEW_TAG}" >/dev/null \
+            || gh release view "$NEW_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; do
+            MINOR=$(echo "$NEW_TAG" | sed -E 's/^v1\.([0-9]+).*/\1/')
+            NEW_TAG="v1.$((MINOR + 1))"
+            TRIES=$((TRIES + 1))
+            if [ "$TRIES" -gt 100 ]; then
+              echo "::error::Could not find a free v1.N tag"
+              exit 1
+            fi
+          done
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
       - name: Setup Typst
+        if: steps.version.outputs.should_release == 'true'
         uses: typst-community/setup-typst@v5
         with:
           typst-version: "0.15.1"
 
       - name: Generate date string
+        if: steps.version.outputs.should_release == 'true'
         id: date
-        run: echo "date=$(date +'%d%m%Y')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
-      - name: Get previous release tag
-        id: prev-tag
+      - name: Compile Resume and Brag Document
+        if: steps.version.outputs.should_release == 'true'
+        run: |
+          mkdir -p dist
+          typst compile src/resume.typ "dist/Resume_${{ steps.version.outputs.new_tag }}_${{ steps.date.outputs.date }}.pdf"
+          typst compile src/bragdoc.typ "dist/Bragdoc_${{ steps.version.outputs.new_tag }}_${{ steps.date.outputs.date }}.pdf"
+          ls -la dist/*.pdf
+
+      - name: Generate changelog
+        if: steps.version.outputs.should_release == 'true'
+        id: changelog
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
-          if [ "$PREV_TAG" = "null" ] || [ -z "$PREV_TAG" ]; then
-            PREV_TAG=""
-          fi
-          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          if [ -n "${{ steps.prev-tag.outputs.prev_tag }}" ]; then
-            RANGE="${{ steps.prev-tag.outputs.prev_tag }}..HEAD"
+          set -euo pipefail
+          NEW_TAG="${{ steps.version.outputs.new_tag }}"
+          PREV_TAG="${{ steps.version.outputs.prev_tag }}"
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
           else
-            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-            RANGE="${FIRST_COMMIT}..HEAD"
+            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
           fi
-          CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$RANGE" --no-merges)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Compile Resume
-        run: |
-          typst compile src/resume.typ src/Resume_${{ steps.date.outputs.date }}.pdf
+          # GitHub-generated notes (uses .github/release.yml categories).
+          ARGS=(-f "tag_name=${NEW_TAG}")
+          if [ -n "$PREV_TAG" ]; then
+            ARGS+=(-f "previous_tag_name=${PREV_TAG}")
+          fi
+          GENERATED=$(gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" "${ARGS[@]}" --jq .body 2>/dev/null || true)
 
-      - name: Compile Brag Document
-        run: |
-          typst compile src/bragdoc.typ src/Bragdoc_${{ steps.date.outputs.date }}.pdf
+          COMMITS=$(git log --pretty=format:'- %s (%h)' "$RANGE" --no-merges || true)
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- No commits found (manual release)."
+          fi
+
+          NOTES_FILE="${RUNNER_TEMP}/release-notes.md"
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$GENERATED" ]; then
+              echo "$GENERATED"
+              echo ""
+            fi
+            echo "### Commits"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            echo "---"
+            if [ -n "$PREV_TAG" ]; then
+              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${NEW_TAG}"
+            else
+              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/commits/${NEW_TAG}"
+            fi
+          } > "$NOTES_FILE"
+
+          echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
+        if: steps.version.outputs.should_release == 'true'
         env:
-          GH_TOKEN: ${{ secrets.TYPST_TOKEN }}
-          TAG: "${{ github.ref_name }}"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_BODY="## Changes since last release"$'\n\n'
-          RELEASE_BODY+="${{ steps.changelog.outputs.changelog }}"$'\n\n'
-          RELEASE_BODY+="---"$'\n'
-          RELEASE_BODY+="**Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prev-tag.outputs.prev_tag }}...${{ github.ref_name }}"
-
-          echo "::group::Diagnostics"
-          ls -la src/*.pdf || echo "PDF assets missing"
-          gh auth status || echo "gh authentication failed"
-          echo "::endgroup::"
-
-          gh release create "$TAG" \
-            --repo="$GITHUB_REPOSITORY" \
-            --title="Release - ${{ github.ref_name }}" \
-            --notes "$RELEASE_BODY" \
-            src/Resume_${{ steps.date.outputs.date }}.pdf \
-            src/Bragdoc_${{ steps.date.outputs.date }}.pdf
+          gh release create "${{ steps.version.outputs.new_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Release - ${{ steps.version.outputs.new_tag }}" \
+            --notes-file "${{ steps.changelog.outputs.notes_file }}" \
+            dist/*.pdf
