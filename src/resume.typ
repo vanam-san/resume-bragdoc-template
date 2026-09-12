@@ -17,12 +17,12 @@
 #let profiles = (
   (
     network: "LinkedIn",
-    username: "yourname",
+    username: "",
     url: "linkedin.com/in/yourname",
   ),
   (
     network: "GitHub",
-    username: "yourname",
+    username: "",
     url: "github.com/yourname",
   ),
   (
@@ -63,9 +63,9 @@
         endDate: "Present",
         highlights: (
           "Promoted to Engineering Manager, leading the *Web App Team of 6 engineers* behind the *BlockChain news feed*",
-          "Scaled the team to *12 engineers* while sustaining a *420fps* caffeine-driven delivery velocity",
-          "Drove a *69% improvement* in deployment frequency via *AI based GraphQL* and *on-server Ethereum mining*",
-          "Managed cross-functional initiative to mine Ethereum on company servers in low Earth orbit, offsetting *$2M/year* in infrastructure costs",
+          "Scaled the team to *12 engineers* while sustaining a *240fps* caffeine-driven delivery velocity",
+          "Drove a *72% improvement* in deployment frequency via *AI based GraphQL* and *orbital arcade hosting*",
+          "Managed cross-functional initiative to host the feed on *arcade cabinets in low Earth orbit*, offsetting *$2M/year* in infrastructure costs",
           "Kept the entire org fully caffeinated with *Antarctican beans ground to 14 nm particles*",
         ),
       ),
@@ -76,7 +76,7 @@
         highlights: (
           "Built *news feed infrastructure* using *React for AI on BlockChain*",
           "Optimized web app feed performance through new *server-side React larceny AI algorithm* to quickly resolve *big data pipeline*",
-          "Led *team of 6 engineers* to mine Ethereum on company servers in *low Earth orbit*",
+          "Led *team of 6 engineers* hosting the feed on *arcade cabinets in low Earth orbit*",
           "Team coffee maker - ensured team of 6 was fully caffeinated with *Antarctican coffee beans ground to 14 nm particles* using a *miniature ion cannon*",
         ),
       ),
@@ -92,7 +92,7 @@
         startDate: "June 2015",
         endDate: "September 2018",
         highlights: (
-          "Added *AI based GraphQL*, resulting in *69% faster page loads*",
+          "Added *AI based GraphQL*, resulting in *72% faster page loads*",
           "Organized team bonding through company potato sack race resulting in increased *team bonding and cohesity*",
           "Rebuilt home display page with *virtualized tables and map* to provide a buttery-smooth *120fps* on screen experience with the design team",
           "Evangelized and adopted an *open-source React UI library*",
@@ -111,7 +111,7 @@
         endDate: "September 2015",
         highlights: (
           "Improved LinkedIn search algorithm *efficiency and accuracy* through the usage of *VoldemortDB, Charizard, and Hadoop*",
-          "Tracked down *Richard Stallman* on IRC and exchanged /msgs (he actually replied!)",
+          "Tracked down a *reclusive kernel maintainer* on IRC and exchanged /msgs (they actually replied!)",
           "Implemented *data quality improvements* via *deduplication and advanced profile ranking* resulting in *faster big data with React*",
         ),
       ),
@@ -170,7 +170,7 @@
     endDate: "Present",
     highlights: (
       "*Server-side React larceny AI algorithm* for *big data pipeline*",
-      "*Ethereum mining* on company servers with a *team of 6*",
+      "*Arcade-cabinet hosting* in low Earth orbit with a *team of 6*",
     ),
   ),
   // Add more projects as needed

@@ -1,6 +1,7 @@
 // Brag document data and entry point. Edit this file to update content.
 // Formatting functions are in functions.typ.
 // Sample data is satirical - replace with your own career information.
+// Tone: bragdoc may be unhinged; keep the resume sober (but facts in sync).
 
 #import "functions.typ": cvinit, render-header, render-goals, render-work-accomplishments, render-accomplishments, render-collaboration, render-skills, render-feedback, render-bragdoc-projects, render-metrics, company-entry, role-entry, role-accomplishment, accomplishment, collaboration, feedback-entry, bragdoc-project-entry, metric-entry
 
@@ -12,9 +13,9 @@
 // Goals and focus areas for the review period
 #let goals = (
   "Scale *news feed infrastructure* to serve more users on *BlockChain*",
-  "Improve *page load performance by another 69%*",
-  "Expand *Ethereum mining operations* across all company servers",
-  "Maintain a *420fps* on-screen experience",
+  "Improve *page load performance by another 72%*",
+  "Expand *arcade-cabinet hosting* across all company servers",
+  "Maintain a *240fps* on-screen experience",
 )
 
 #let focus-areas = (
@@ -40,21 +41,21 @@
           role-accomplishment(
             title: "Promotion to Engineering Manager",
             description: "Promoted to EM leading the *Web App Team of 6* behind the *BlockChain news feed*",
-            impact: "Recognized for *technical leadership* and *Ethereum mining ops*",
+            impact: "Recognized for *technical leadership* and *orbital hosting ops*",
           ),
           role-accomplishment(
             title: "Team Scaling",
             description: "Scaled the Web App Team from *6 to 12 engineers*",
-            impact: "Sustained *420fps* caffeine-driven delivery velocity",
+            impact: "Sustained *240fps* caffeine-driven delivery velocity",
           ),
           role-accomplishment(
             title: "Deployment Frequency Improvement",
-            description: "Drove *69% improvement* in deployment frequency via *AI based GraphQL* and *on-server Ethereum mining*",
+            description: "Drove *72% improvement* in deployment frequency via *AI based GraphQL* and *orbital arcade hosting*",
             impact: "*Faster, zero-downtime releases*",
           ),
           role-accomplishment(
             title: "Infrastructure Cost Offset",
-            description: "Managed cross-functional *Ethereum mining* on company servers in *low Earth orbit*",
+            description: "Managed cross-functional *arcade hosting* on *cabinets in low Earth orbit*",
             impact: "*$2M/year* infrastructure cost offset",
           ),
         ),
@@ -75,9 +76,9 @@
             impact: "*Faster pipeline resolution*",
           ),
           role-accomplishment(
-            title: "Ethereum Mining on Company Servers",
-            description: "Led *team of 6 engineers* to mine *Ethereum* on company servers in *low Earth orbit*",
-            impact: "Offset infrastructure costs (unofficially)",
+            title: "Arcade Hosting in Low Earth Orbit",
+            description: "Led *team of 6 engineers* hosting the feed on *arcade cabinets in low Earth orbit*",
+            impact: "Offset infrastructure costs (finance approved, eventually)",
           ),
           role-accomplishment(
             title: "Team Coffee Maker",
@@ -101,7 +102,7 @@
           role-accomplishment(
             title: "AI Based GraphQL",
             description: "Added *AI based GraphQL* to the web app",
-            impact: "*69% faster page loads*",
+            impact: "*72% faster page loads*",
           ),
           role-accomplishment(
             title: "Potato Sack Race Team Bonding",
@@ -111,10 +112,10 @@
           role-accomplishment(
             title: "Home Display Revamp",
             description: "Rebuilt home display page with *virtualized tables and map* with the design team, achieving a buttery-smooth *120fps*",
-            impact: "*420fps* on-screen experience",
+            impact: "*120fps* on-screen experience",
           ),
           role-accomplishment(
-            title: "RaeLilBlack React UI Library",
+            title: "WarpUI React UI Library",
             description: "Evangelized and adopted an *open-source React UI library* (with great enthusiasm and questionable dance moves)",
             impact: "*Standardized UI* across teams",
           ),
@@ -139,7 +140,7 @@
           ),
           role-accomplishment(
             title: "Executive Outreach",
-            description: "Tracked down *Richard Stallman* on IRC and exchanged /msgs (he actually replied!)",
+            description: "Tracked down *a reclusive kernel maintainer* on IRC and exchanged /msgs (they actually replied!)",
             impact: "*Executive visibility*",
           ),
           role-accomplishment(
@@ -196,7 +197,7 @@
   accomplishment(
     title: "Promotion to Engineering Manager (Instagram)",
     what: "Promoted to EM, leading the *Web App Team* building the *BlockChain news feed*",
-    why: "Needed engineering leadership for a growing team and *Ethereum mining ops*",
+    why: "Needed engineering leadership for a growing team and *orbital hosting ops*",
     impact: "Scaled team to *12* and offset *$2M/year* in infra costs",
     collaborators: "Web App Team and cross-functional partners",
     date: "2021-Present",
@@ -205,7 +206,7 @@
     title: "AI Based GraphQL (Zillow)",
     what: "Added *AI based GraphQL* to the web app",
     why: "Page loads were too slow",
-    impact: "*69% faster page loads*",
+    impact: "*72% faster page loads*",
     collaborators: "Web App Team",
     date: "2015-2018",
   ),
@@ -231,38 +232,38 @@
 #let collaborations = (
   collaboration(
     partner: "Web App Team (Instagram)",
-    contribution: "Led *6 engineers* to mine *Ethereum* on company servers and keep the *feed pipeline fast*.",
+    contribution: "Led *6 engineers* hosting the feed on *low-orbit arcade cabinets*, keeping the *pipeline fast*.",
   ),
   collaboration(
     partner: "Lhana Rhodes (Zillow)",
-    contribution: "Co-built the home display revamp delivering a *420fps* on-screen experience.",
+    contribution: "Co-built the home display revamp delivering a *120fps* on-screen experience.",
   ),
   collaboration(
-    partner: "Richard Stallman (IRC)",
+    partner: "a reclusive kernel maintainer (IRC)",
     contribution: "Connected on IRC and aligned on search direction via */msg*.",
   ),
   collaboration(
     partner: "Cross-Functional Partners (Instagram)",
-    contribution: "Led the *Ethereum mining initiative* across teams, offsetting *$2M/year* in infra costs.",
+    contribution: "Led the *orbital arcade-hosting* initiative across teams, offsetting *$2M/year* in infra costs.",
   ),
 )
 
 // New skills learned and challenges overcome
 #let skills = (
-  "Mastered *JavaScript, TypeScript, Node.js, and C++* across fintech, health, and adult entertainment",
+  "Mastered *JavaScript, TypeScript, Node.js, and C++* across fintech, health, and deep-space logistics",
   "Deepened expertise in *React AI* and *server-side larceny algorithms*",
-  "Gained proficiency in *BlockChain systems* and *Ethereum mining*",
+  "Gained proficiency in *BlockChain systems* and *orbital hosting*",
   "Built expertise in *big data pipelines* (*VoldemortDB, Charizard, Hadoop*)",
   "Strengthened *team leadership* (managed a *team of 6*) and *caffeine logistics*",
-  "Evangelized *UI standardization* via the *RaeLilBlack React library*",
+  "Evangelized *UI standardization* via the *WarpUI React library*",
   "Developed *executive communication skills* (direct outreach, occasionally successful)",
 )
 
 #let challenges = (
-  "Mined *Ethereum on company servers* without getting caught",
-  "Delivered a *420fps home display experience* with *virtualized tables*",
+  "Hosted the feed on *low-orbit arcade cabinets* without dropping a frame",
+  "Delivered a *120fps home display experience* with *virtualized tables*",
   "Improved LinkedIn search with *VoldemortDB, Charizard, and Hadoop*",
-  "Managed an intern team health incident (*60% infection rate*)",
+  "Managed the *bootcamp snack incident* (60% of interns affected)",
 )
 
 // Positive feedback and recognition quotes
@@ -273,7 +274,7 @@
     date: "2018-Present",
   ),
   feedback-entry(
-    quote: "*AI GraphQL* delivered *69% faster page loads*, absolutely based.",
+    quote: "*AI GraphQL* delivered *72% faster page loads*, absolutely based.",
     person: "Performance Review - Zillow",
     date: "2015-2018",
   ),
@@ -288,7 +289,7 @@
     date: "2011-2012",
   ),
   feedback-entry(
-    quote: "Promoted to EM and immediately scaled the team to *12* while offsetting *$2M/year* in infra via *Ethereum mining*.",
+    quote: "Promoted to EM and immediately scaled the team to *12* while offsetting *$2M/year* in infra via *orbital arcade hosting*.",
     person: "Director - Instagram",
     date: "2021-Present",
   ),
@@ -302,7 +303,7 @@
     roles: ("React", "AI", "BlockChain"),
     highlights: (
       "*Server-side React larceny AI algorithm* for *big data pipeline*",
-      "*Ethereum mining* on company servers with a *team of 6*",
+      "*Arcade-cabinet hosting* in low Earth orbit with a *team of 6*",
       "*Antarctican coffee ground to 14 nm* for max velocity",
     ),
     metrics: (
@@ -318,12 +319,12 @@
     description: "Rebuilt home display page with virtualized tables and map.",
     roles: ("React", "GraphQL", "Virtualization"),
     highlights: (
-      "*AI based GraphQL* for *69% faster page loads*",
+      "*AI based GraphQL* for *72% faster page loads*",
                "*120fps* on-screen experience with the design team",
-      "Adopted *RaeLilBlack React UI library*",
+      "Adopted *WarpUI React UI library*",
     ),
     metrics: (
-      "Page load: *+69%*",
+      "Page load: *+72%*",
       "On-screen FPS: *120*",
       "UI library: *open-source React*",
     ),
@@ -337,12 +338,12 @@
     highlights: (
       "Improved search via *VoldemortDB, Charizard, and Hadoop*",
       "Data quality via *deduplication and profile ranking*",
-      "Connected with *Reid Hoffman* on LinkedIn",
+      "Exchanged DMs with a *famous founder* (left on read)",
     ),
     metrics: (
       "Search: *improved efficiency & accuracy*",
       "Data quality: *dedup + ranking*",
-      "Executive: *Reid Hoffman DM*",
+      "Executive: *famous-founder DM (unanswered)*",
     ),
     status: "Shipped",
     date: "2013-2015",
@@ -353,7 +354,7 @@
     roles: ("React", "Big Data", "BlockChain"),
     highlights: (
       "Enhanced *Edge deployment stability* on *BlockChain*",
-      "Spearheaded *Microsofters 4 Trump* rally",
+       "Spearheaded the annual *Star Fleet recruitment rally* (gold shirts optional)",
                "Intern onboarding bootcamp (*60% faster ramp-up*)",
     ),
     metrics: (
@@ -370,7 +371,7 @@
 #let metrics = (
   metric-entry(
     label: "Page Load Improvement",
-    value: "*69%*",
+    value: "*72%*",
     description: "Faster page loads from *AI based GraphQL*",
   ),
   metric-entry(
@@ -381,7 +382,7 @@
   metric-entry(
     label: "Engineers Led",
     value: "*6*",
-    description: "Team led at Instagram for *Ethereum mining*",
+    description: "Team led at Instagram for *orbital arcade hosting*",
   ),
   metric-entry(
     label: "Coffee Particle Size",
@@ -405,7 +406,7 @@
   ),
   metric-entry(
     label: "SAT Score",
-    value: "*2348/2400*",
+    value: "*2380/2400*",
     description: "Pre-2016 SAT",
   ),
   metric-entry(
@@ -416,7 +417,7 @@
   metric-entry(
     label: "Infra Cost Offset",
     value: "*$2M/year*",
-    description: "Via managed *Ethereum mining* on company servers in low Earth orbit",
+    description: "Via managed *arcade hosting* on cabinets in low Earth orbit",
   ),
 )
 
