@@ -13,20 +13,22 @@ tasks:
       - git pull
 
   dev:
-    desc: Watch resume and bragdoc in parallel
-    deps:
-      - dev-resume
-      - dev-bragdoc
+    desc: Watch resume and bragdoc in parallel (Ctrl+C stops both)
+    cmds:
+      # Task deps run sequentially and `typst watch` blocks, so run both
+      # watchers as background jobs in one shell instead.
+      # --font-path picks up the vendored IBM Plex Sans in src/fonts.
+      - typst watch --font-path src/fonts src/resume.typ src/resume.pdf & typst watch --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf & wait
 
   dev-resume:
     desc: Watch and rebuild resume
     cmds:
-      - typst watch src/resume.typ src/resume.pdf
+      - typst watch --font-path src/fonts src/resume.typ src/resume.pdf
 
   dev-bragdoc:
     desc: Watch and rebuild bragdoc
     cmds:
-      - typst watch src/bragdoc.typ src/bragdoc.pdf
+      - typst watch --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
 
   compile:
     desc: Compile resume and bragdoc
@@ -37,9 +39,9 @@ tasks:
   compile-resume:
     desc: Compile resume PDF
     cmds:
-      - typst compile src/resume.typ src/resume.pdf
+      - typst compile --font-path src/fonts src/resume.typ src/resume.pdf
 
   compile-bragdoc:
     desc: Compile bragdoc PDF
     cmds:
-      - typst compile src/bragdoc.typ src/bragdoc.pdf
+      - typst compile --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
