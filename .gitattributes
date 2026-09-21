@@ -47,6 +47,12 @@
 # *.svg    binary
 *.eps      binary
 
+# Fonts (vendored in src/fonts) - never normalize line endings
+*.ttf      binary
+*.otf      binary
+*.woff     binary
+*.woff2    binary
+
 # Scripts
 *.bash     text eol=lf
 *.fish     text eol=lf
