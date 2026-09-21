@@ -6,6 +6,26 @@
 // =============================================================================
 
 // =============================================================================
+// Input Helpers
+// =============================================================================
+// as-array: accept an array, a single value, or ""/none (hidden field).
+// clean-url / ext-link: avoid "https://https://..." when users paste full URLs.
+
+#let as-array(v) = {
+  if type(v) == array { v } else if v == "" or v == none { () } else { (v,) }
+}
+
+#let clean-url(url) = {
+  if url == "" or url == none { "" }
+  else if url.starts-with("http://") or url.starts-with("https://") or url.starts-with("mailto:") { url }
+  else { "https://" + url }
+}
+
+#let ext-link(url, body) = {
+  link(clean-url(url))[#body]
+}
+
+// =============================================================================
 // Date Range Formatter
 // =============================================================================
 // Displays start and end dates with an en dash (e.g., "Mar 2025 – Mar 2026")
@@ -29,18 +49,42 @@
 // Usage: #parse-bold("Drove a *72% improvement* in deployment")
 
 #let parse-bold(text-str) = {
-  let parts = text-str.split("*")
-  let result = ()
-  for i in range(parts.len()) {
-    let part = parts.at(i)
-    if part == "" { continue }
-    if calc.rem(i, 2) == 1 {
-      result.push(text(weight: "bold")[#part])
-    } else {
-      result.push([#part])
+  // Non-strings pass through; strings without stars need no work.
+  if type(text-str) != str { return [#text-str] }
+  if not text-str.contains("*") { return [#text-str] }
+  // Char-level toggle parser: single * toggles bold, ** is a literal *,
+  // unclosed trailing * is rendered literally instead of bolding the tail.
+  let out = ()
+  let buf = ""
+  let bold = false
+  let chars = text-str.clusters()
+  let i = 0
+  while i < chars.len() {
+    let c = chars.at(i)
+    if c == "*" and i + 1 < chars.len() and chars.at(i + 1) == "*" {
+      buf += "*"
+      i += 2
+      continue
     }
+    if c == "*" {
+      if buf != "" {
+        if bold { out.push(text(weight: "bold")[#buf]) } else { out.push([#buf]) }
+        buf = ""
+      }
+      bold = not bold
+      i += 1
+      continue
+    }
+    buf += c
+    i += 1
   }
-  result.join()
+  if buf != "" {
+    if bold { out.push([#sym.star#buf]) } else { out.push([#buf]) }
+  } else if bold {
+    out.push(sym.star)
+  }
+  if out.len() == 0 { return [] }
+  out.join()
 }
 
 // =============================================================================
@@ -50,7 +94,7 @@
 
 #let setrules(doc) = {
   set text(
-    font: "Libertinus Serif",
+    font: ("IBM Plex Sans", "Libertinus Serif", "DejaVu Sans"),
     //font: "DejaVu Sans Mono", "New Computer Modern"
     size: 11pt,
     hyphenate: false,
@@ -76,7 +120,7 @@
     #v(-2pt)
     #set align(left)
     #set text(
-      font: "Libertinus Serif",
+      font: ("IBM Plex Sans", "Libertinus Serif", "DejaVu Sans"),
       size: 1em,
       weight: "bold",
       fill: rgb("#1f3a5f"),
@@ -88,7 +132,7 @@
 
   show heading.where(level: 1): it => block(width: 100%)[
     #set text(
-      font: "Libertinus Serif",
+      font: ("IBM Plex Sans", "Libertinus Serif", "DejaVu Sans"),
       size: 1.5em,
       weight: "bold",
       fill: rgb("#1f3a5f"),
@@ -173,14 +217,14 @@
     if location != "" { location },
     if phone != "" { phone },
     if email != "" { link("mailto:" + email)[#email] },
-    if url != "" { link("https://" + url)[#url] },
+    if url != "" { ext-link(url, [#url]) },
   ).filter(x => x != none)
   // Profiles: drop nameless entries, plain text when no URL.
-  let profile-items = profiles
-    .filter(p => p.at("username", default: "") != "")
+  let profile-items = as-array(profiles)
+    .filter(p => type(p) == dictionary and p.at("username", default: "") != "")
     .map(p => {
       if p.at("url", default: "") != "" {
-        link("https://" + p.url)[#p.username]
+        ext-link(p.url, [#p.username])
       } else {
         [#p.username]
       }
@@ -233,7 +277,7 @@
 // =============================================================================
 
 #let render-summary(summary) = {
-  if summary == "" { return }
+  if summary == "" or summary == none { return }
   block[
     == Summary
     #par[#parse-bold(summary)]
@@ -245,44 +289,45 @@
 // =============================================================================
 
 #let render-education(educations) = {
-  if educations.len() == 0 { return }
-  let valid-educations = educations.filter(e => e.institution != "" or e.area != "" or e.studyType != "")
+  let educations-arr = as-array(educations)
+  if educations-arr.len() == 0 { return }
+  let valid-educations = educations-arr.filter(e => type(e) == dictionary and (e.at("institution", default: "") != "" or e.at("area", default: "") != "" or e.at("studyType", default: "") != ""))
   if valid-educations.len() == 0 { return }
   block[
     == Education
     #for edu in valid-educations {
-      let area_str = if edu.area != "" { " in " + edu.area } else { "" }
-      let study-display = if edu.studyType != "" or area_str != "" { [#text(style: "italic")[#edu.studyType#area_str] #h(1fr)] } else { [] }
+      let area_str = if edu.at("area", default: "") != "" { " in " + edu.area } else { "" }
+      let study-display = if edu.at("studyType", default: "") != "" or area_str != "" { [#text(style: "italic")[#edu.at("studyType", default: "")#area_str] #h(1fr)] } else { [] }
 
       // Robust courses handling: supports "" , "single course", ("a","b"), or ()
       let courses-raw = edu.at("courses", default: ())
       let valid-courses = if type(courses-raw) == str {
         if courses-raw != "" { (courses-raw,) } else { () }
       } else {
-        courses-raw.filter(c => c != "" and c != none)
+        as-array(courses-raw).filter(c => c != "" and c != none)
       }
-      let edu-items = ""
+      // Build meta lines as content (no eval): avoids markup injection from data.
+      let edu-meta = ()
       if valid-courses.len() > 0 {
-        edu-items = edu-items + "- *Courses*: " + valid-courses.join(", ")
+        edu-meta.push([*Courses*: #valid-courses.join(", ")])
       }
       // Optional score if present and non-empty
       let score-raw = edu.at("score", default: "")
       if score-raw != "" and score-raw != none {
-        if edu-items != "" { edu-items = edu-items + "\n" }
-        edu-items = edu-items + "- *Score*: " + score-raw
+        edu-meta.push([*Score*: #score-raw])
       }
 
       let date-line = daterange_short(edu.at("startDate", default: ""), edu.at("endDate", default: ""))
 
       block(width: 100%, above: 0.625em)[
         #if edu.at("url", default: "") != "" [
-          *#link("https://" + edu.url)[#edu.institution]* #h(1fr) \
-        ] else if edu.institution != "" [
+          *#ext-link(edu.url, [#edu.institution])* #h(1fr) \
+        ] else if edu.at("institution", default: "") != "" [
           *#edu.institution* #h(1fr) \
         ]
         #if study-display != [] { study-display }
         #if date-line != [] { [#date-line \ ] }
-        #if edu-items != "" { eval(edu-items, mode: "markup") }
+        #for m in edu-meta [ - #m \ ]
       ]
     }
   ]
@@ -293,15 +338,16 @@
 // =============================================================================
 
 #let render-work(works) = {
-  if works.len() == 0 { return }
-  let valid-works = works.filter(w => w.at("name", default: "") != "")
+  let works-arr = as-array(works)
+  if works-arr.len() == 0 { return }
+  let valid-works = works-arr.filter(w => type(w) == dictionary and w.at("name", default: "") != "")
   if valid-works.len() == 0 { return }
   block[
     == Experience
     #for w in valid-works {
       let company_block = block(width: 100%, above: 0.625em)[
         #if w.at("url", default: "") != "" [
-          *#link("https://" + w.url)[#w.name]* #h(1fr)
+          *#ext-link(w.url, [#w.name])* #h(1fr)
         ] else [
           *#w.name* #h(1fr)
         ]
@@ -310,9 +356,10 @@
       ]
 
       let position_blocks = ()
-      for p in w.positions {
-        if p.at("position", default: "") == "" and p.at("highlights", default: ()).len() == 0 { continue }
-        let valid-highlights = p.at("highlights", default: ()).filter(h => h != "" and h != none)
+      for p in as-array(w.at("positions", default: ())) {
+        if type(p) != dictionary { continue }
+        if p.at("position", default: "") == "" and as-array(p.at("highlights", default: ())).len() == 0 { continue }
+        let valid-highlights = as-array(p.at("highlights", default: ())).filter(h => h != "" and h != none)
         let has-position = p.at("position", default: "") != ""
         let has-dates = p.at("startDate", default: "") != "" or p.at("endDate", default: "") != ""
         position_blocks.push(
@@ -345,8 +392,9 @@
 // =============================================================================
 
 #let render-work-accomplishments(companies) = {
-  if companies.len() == 0 { return }
-  let valid-companies = companies.filter(c => c.at("name", default: "") != "")
+  let companies-arr = as-array(companies)
+  if companies-arr.len() == 0 { return }
+  let valid-companies = companies-arr.filter(c => type(c) == dictionary and c.at("name", default: "") != "")
   if valid-companies.len() == 0 { return }
   block[
     == Work Experience & Accomplishments
@@ -354,7 +402,7 @@
     #for company in valid-companies {
       let company_block = block(width: 100%, above: 0.625em)[
         #if company.at("url", default: "") != "" [
-          *#link("https://" + company.url)[#company.name]* #h(1fr)
+          *#ext-link(company.url, [#company.name])* #h(1fr)
         ] else [
           *#company.name* #h(1fr)
         ]
@@ -363,9 +411,10 @@
       ]
 
       let role_blocks = ()
-      for role in company.roles {
-        if role.at("title", default: "") == "" and role.at("accomplishments", default: ()).len() == 0 { continue }
-        let valid-accs = role.at("accomplishments", default: ()).filter(a => a.at("title", default: "") != "" or a.at("description", default: "") != "" or a.at("impact", default: "") != "")
+      for role in as-array(company.at("roles", default: ())) {
+        if type(role) != dictionary { continue }
+        if role.at("title", default: "") == "" and as-array(role.at("accomplishments", default: ())).len() == 0 { continue }
+        let valid-accs = as-array(role.at("accomplishments", default: ())).filter(a => type(a) == dictionary and (a.at("title", default: "") != "" or a.at("description", default: "") != "" or a.at("impact", default: "") != ""))
         role_blocks.push(
           block(width: 100%, above: 0.375em, below: 1.25em)[
             #if role.at("title", default: "") != "" {
@@ -399,8 +448,9 @@
 // =============================================================================
 
 #let render-accomplishments(accomplishments) = {
-  if accomplishments.len() == 0 { return }
-  let valid-accs = accomplishments.filter(a => a.at("title", default: "") != "" or a.at("what", default: "") != "" or a.at("impact", default: "") != "")
+  let accs-arr = as-array(accomplishments)
+  if accs-arr.len() == 0 { return }
+  let valid-accs = accs-arr.filter(a => type(a) == dictionary and (a.at("title", default: "") != "" or a.at("what", default: "") != "" or a.at("impact", default: "") != ""))
   if valid-accs.len() == 0 { return }
   block[
     == Major Accomplishments
@@ -423,8 +473,8 @@
 // =============================================================================
 
 #let render-goals(goals, focus-areas) = {
-  let valid-goals = goals.filter(g => g != "" and g != none)
-  let valid-areas = focus-areas.filter(a => a != "" and a != none)
+  let valid-goals = as-array(goals).filter(g => g != "" and g != none)
+  let valid-areas = as-array(focus-areas).filter(a => a != "" and a != none)
   if valid-goals.len() == 0 and valid-areas.len() == 0 { return }
   block[
     == Goals & Focus Areas
@@ -452,8 +502,9 @@
 // =============================================================================
 
 #let render-collaboration(collaborations) = {
-  if collaborations.len() == 0 { return }
-  let valid-collabs = collaborations.filter(c => c.at("partner", default: "") != "" or c.at("contribution", default: "") != "")
+  let collabs-arr = as-array(collaborations)
+  if collabs-arr.len() == 0 { return }
+  let valid-collabs = collabs-arr.filter(c => type(c) == dictionary and (c.at("partner", default: "") != "" or c.at("contribution", default: "") != ""))
   if valid-collabs.len() == 0 { return }
   block[
     == Collaboration & Cross-Functional Work
@@ -470,8 +521,8 @@
 // =============================================================================
 
 #let render-skills(skills, challenges) = {
-  let valid-skills = skills.filter(s => s != "" and s != none)
-  let valid-challenges = challenges.filter(c => c != "" and c != none)
+  let valid-skills = as-array(skills).filter(s => s != "" and s != none)
+  let valid-challenges = as-array(challenges).filter(c => c != "" and c != none)
   if valid-skills.len() == 0 and valid-challenges.len() == 0 { return }
   block[
     == Skills Developed & Growth
@@ -499,8 +550,9 @@
 // =============================================================================
 
 #let render-feedback(feedback-items) = {
-  if feedback-items.len() == 0 { return }
-  let valid-items = feedback-items.filter(i => i.at("quote", default: "") != "" or i.at("person", default: "") != "")
+  let items-arr = as-array(feedback-items)
+  if items-arr.len() == 0 { return }
+  let valid-items = items-arr.filter(i => type(i) == dictionary and (i.at("quote", default: "") != "" or i.at("person", default: "") != ""))
   if valid-items.len() == 0 { return }
   block[
     == Positive Feedback & Recognition
@@ -524,17 +576,18 @@
 // =============================================================================
 
 #let render-project(projects) = {
-  if projects.len() == 0 { return }
-  let valid-projects = projects.filter(p => p.at("name", default: "") != "")
+  let projects-arr = as-array(projects)
+  if projects-arr.len() == 0 { return }
+  let valid-projects = projects-arr.filter(p => type(p) == dictionary and p.at("name", default: "") != "")
   if valid-projects.len() == 0 { return }
   block[
     == Projects
     #for project in valid-projects {
-      let valid-roles = project.at("roles", default: ()).filter(r => r != "" and r != none)
-      let valid-highlights = project.at("highlights", default: ()).filter(h => h != "" and h != none)
+      let valid-roles = as-array(project.at("roles", default: ())).filter(r => r != "" and r != none)
+      let valid-highlights = as-array(project.at("highlights", default: ())).filter(h => h != "" and h != none)
       block(width: 100%, above: 0.625em)[
         #if project.at("url", default: "") != "" [
-          *#link("https://" + project.url)[#project.name]* \
+          *#ext-link(project.url, [#project.name])* \
         ] else [
           *#project.name* \
         ]
@@ -557,21 +610,22 @@
 // =============================================================================
 
 #let render-bragdoc-projects(projects) = {
-  if projects.len() == 0 { return }
-  let valid-projects = projects.filter(p => p.at("name", default: "") != "")
+  let projects-arr = as-array(projects)
+  if projects-arr.len() == 0 { return }
+  let valid-projects = projects-arr.filter(p => type(p) == dictionary and p.at("name", default: "") != "")
   if valid-projects.len() == 0 { return }
   block[
     == Projects & Initiatives
 
     #for project in valid-projects {
-      let valid-roles = project.at("roles", default: ()).filter(r => r != "" and r != none)
-      let valid-highlights = project.at("highlights", default: ()).filter(h => h != "" and h != none)
-      let valid-metrics = project.at("metrics", default: ()).filter(m => m != "" and m != none)
+      let valid-roles = as-array(project.at("roles", default: ())).filter(r => r != "" and r != none)
+      let valid-highlights = as-array(project.at("highlights", default: ())).filter(h => h != "" and h != none)
+      let valid-metrics = as-array(project.at("metrics", default: ())).filter(m => m != "" and m != none)
       let has-status = project.at("status", default: "") != ""
       let has-date = project.at("date", default: "") != ""
       block(width: 100%, above: 0.25em, below: 1.25em)[
         #if project.at("url", default: "") != "" [
-          *#link("https://" + project.url)[#project.name]* \
+          *#ext-link(project.url, [#project.name])* \
         ] else [
           *#project.name* \
         ]
@@ -607,8 +661,9 @@
 // =============================================================================
 
 #let render-custom(custom_section) = {
-  if custom_section.at("title", default: "") == "" and custom_section.at("highlights", default: ()).len() == 0 { return }
-  let valid-highlights = custom_section.at("highlights", default: ()).filter(h => h.at("summary", default: "") != "" or h.at("description", default: "") != "")
+  if type(custom_section) != dictionary { return }
+  if custom_section.at("title", default: "") == "" and as-array(custom_section.at("highlights", default: ())).len() == 0 { return }
+  let valid-highlights = as-array(custom_section.at("highlights", default: ())).filter(h => type(h) == dictionary and (h.at("summary", default: "") != "" or h.at("description", default: "") != ""))
   if valid-highlights.len() == 0 and custom_section.at("title", default: "") == "" { return }
   block[
     #if custom_section.at("title", default: "") != "" [ == #custom_section.title ]
@@ -625,8 +680,9 @@
 // =============================================================================
 
 #let render-metrics(metrics) = {
-  if metrics.len() == 0 { return }
-  let valid-metrics = metrics.filter(m => m.at("label", default: "") != "" or m.at("value", default: "") != "" or m.at("description", default: "") != "")
+  let metrics-arr = as-array(metrics)
+  if metrics-arr.len() == 0 { return }
+  let valid-metrics = metrics-arr.filter(m => type(m) == dictionary and (m.at("label", default: "") != "" or m.at("value", default: "") != "" or m.at("description", default: "") != ""))
   if valid-metrics.len() == 0 { return }
   block[
     == Metrics & Impact
