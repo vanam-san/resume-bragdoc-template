@@ -27,9 +27,9 @@ cd resume-bragdoc-template
 # Watch for changes (live preview)
 task dev
 
-# Or compile manually
-typst compile src/resume.typ src/resume.pdf
-typst compile src/bragdoc.typ src/bragdoc.pdf
+# Or compile manually (fonts are vendored in src/fonts)
+typst compile --font-path src/fonts src/resume.typ src/resume.pdf
+typst compile --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
 ```
 
 ## Guidelines
@@ -68,7 +68,7 @@ Examples:
 
 ## Releases
 
-Every merge to `master` automatically cuts a `v1.N` release with fresh PDFs (see `.github/workflows/release.yml`). Batch trivial changes where possible, and include `[skip release]` in the commit message to suppress a release for a trivial update.
+Every merge to `master` automatically cuts a `v1.N` release with fresh PDFs (see `.github/workflows/release.yml`). Batch trivial changes where possible, and include `[skip release]` in any commit message in the release range to suppress a release for a trivial update.
 
 ## What Can I Contribute?
 
@@ -83,9 +83,10 @@ Every merge to `master` automatically cuts a `v1.N` release with fresh PDFs (see
 If adding a new section to the resume or brag document:
 
 1. Create a `render-{section-name}` function in `functions.typ`
-2. Add an empty array guard: `if items.len() == 0 { return }`
+2. Add an empty-input guard via `as-array(...)`: accept arrays, single values, and `""`/`none` (hidden fields)
 3. Follow the existing heading style (level 2 with horizontal rule)
 4. Document the function in this file or the README
+5. Use `ext-link` for URLs (handles pasted `https://…` without doubling) and `parse-bold` for user-facing text fields
 
 ## Questions?
 

@@ -23,11 +23,11 @@ Sample data is satirical — replace it with your own career information.
 | `src/bragdoc.typ` | Brag document data and entry point — edit goals, accomplishments, collaborations, skills, feedback, projects, metrics |
 | `src/functions.typ` | Shared layout, style rules, and render helpers (`cvinit`, `render-*`, `parse-bold`, `daterange_short`) |
 
-Generated PDFs: `src/resume.pdf` and `src/bragdoc.pdf` (tracked for preview; releases use dated copies).
+Generated PDFs (`src/resume.pdf`, `src/bragdoc.pdf`) are gitignored build outputs (see `.gitignore`); previews are `preview-*.png`. Releases attach dated copies.
 
 ## Bold Highlights
 
-This template includes a lightweight markup parser `parse-bold` (`src/functions.typ:31`) that renders `*text*` as bold. Use it to make metrics, technologies, and impact stand out in scans.
+This template includes a lightweight markup parser `parse-bold` (`src/functions.typ`) that renders `*text*` as bold. Use it to make metrics, technologies, and impact stand out in scans. Single `*...*` toggles bold; `**` renders a literal `*`; an unclosed trailing `*` is rendered literally.
 
 **Where it is supported:**
 
@@ -60,13 +60,14 @@ This template includes a lightweight markup parser `parse-bold` (`src/functions.
 
 - Bold the *result* first (numbers, %, $, stack) and the *key action* second — e.g., `*69% faster page loads* via *virtualized tables*`.
 - Keep it to 1–2 bolds per bullet; over-bolding reduces scanability.
-- Plain `*` characters are consumed by the parser. Escape them as needed or avoid `*` in non-bold contexts.
+- Special cases: `**` renders a literal `*`, and an unclosed trailing `*` is shown literally — so `2 * 3` stays as-is.
 
 ## Quick Start
 
 ### Prerequisites
 
 - [Typst 0.15.1+](https://typst.app/docs/install/) (CI pins `0.15.1` in `.github/workflows/release.yml`; newer local versions may render slightly differently)
+- No font install needed — **IBM Plex Sans** (Regular/Bold/Italic/BoldItalic, OFL-licensed) is vendored in `src/fonts/` and picked up via `--font-path src/fonts` (already wired into `TASKFILE.yml` and CI). Fallbacks if the vendored files are ever missing: `Libertinus Serif`, `DejaVu Sans`.
 - [Task](https://taskfile.dev/installation/) — optional, for `task` shortcuts
 
 ### Local Development
@@ -82,14 +83,14 @@ task dev-resume
 task dev-bragdoc
 ```
 
-Without Task:
+Without Task (note `--font-path src/fonts` for the vendored IBM Plex Sans):
 
 ```bash
-typst compile src/resume.typ src/resume.pdf
-typst compile src/bragdoc.typ src/bragdoc.pdf
+typst compile --font-path src/fonts src/resume.typ src/resume.pdf
+typst compile --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
 
-typst watch src/resume.typ src/resume.pdf
-typst watch src/bragdoc.typ src/bragdoc.pdf
+typst watch --font-path src/fonts src/resume.typ src/resume.pdf
+typst watch --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
 ```
 
 Open the generated PDFs in your viewer — `typst watch` rebuilds incrementally.
@@ -104,7 +105,7 @@ Open the generated PDFs in your viewer — `typst watch` rebuilds incrementally.
    - `goals`, `focus-areas`, `companies` (via `company-entry` / `role-entry` / `role-accomplishment`)
    - `accomplishments`, `collaborations`, `skills`/`challenges`, `feedback-items`, `projects`, `metrics`
 3. **Add bold highlights** — wrap metrics/tech/impact in `*...*` inside any `parse-bold`-supported field (see above).
-4. **Preview** — `task dev` or `typst watch`, then commit.
+4. **Preview** — `task dev` (or the `typst watch --font-path src/fonts …` commands above), then commit.
 
 Example diff for a bullet:
 
@@ -122,8 +123,9 @@ Example diff for a bullet:
 │   ├── functions.typ        # Shared style, parse-bold, and all render-* helpers
 │   ├── resume.typ           # Resume data + #render-* calls
 │   ├── bragdoc.typ          # Brag doc data + #render-* calls
-│   ├── resume.pdf           # Compiled resume (preview)
-│   └── bragdoc.pdf          # Compiled brag doc (preview)
+│   ├── fonts/               # Vendored IBM Plex Sans (OFL) — used via --font-path
+│   ├── resume.pdf           # Compiled resume (gitignored build output)
+│   └── bragdoc.pdf          # Compiled brag doc (gitignored build output)
 ├── .github/workflows/
 │   └── release.yml          # Auto-releases dated PDFs on every master update
 ├── TASKFILE.yml             # task compile / task dev shortcuts
@@ -132,14 +134,14 @@ Example diff for a bullet:
 
 Key helpers in `functions.typ`:
 
-- `cvinit` — page setup, margins, footer, fonts (`Libertinus Serif`, 11pt)
-- `parse-bold(text-str)` — splits on `*` and bolds odd segments
+- `cvinit` — page setup, margins, footer, fonts (`IBM Plex Sans`, 11pt)
+- `parse-bold(text-str)` — `*...*` toggle parser (`**` = literal `*`, unclosed tail rendered literally)
 - `daterange_short(start, end)` — `Start – End` formatter
 - `render-basic-info` / `render-header` / `render-summary` / `render-work` / `render-education` / `render-project` / `render-custom` (resume) and `render-goals` / `render-work-accomplishments` / `render-accomplishments` / `render-collaboration` / `render-skills` / `render-feedback` / `render-bragdoc-projects` / `render-metrics` (brag doc)
 
 ## Styling
 
-- **Fonts:** `Libertinus Serif` (fallback to system serif if unavailable). Change in `setrules` / `showrules` in `functions.typ`.
+- **Fonts:** `IBM Plex Sans`, vendored in `src/fonts/` (OFL license) and loaded via `--font-path src/fonts`. Fallbacks: `Libertinus Serif`, `DejaVu Sans`. Change the stack in `setrules` / `showrules` in `functions.typ`.
 - **Accent:** `#1f3a5f` for headings and role titles; `#555555` for secondary text.
 - **Paper:** US Letter, `0.5in` top/left/right, `0.75in` bottom, justified paragraphs, `7.5pt` list spacing.
 - Adjust `set text(size: ...)`, `set par(leading: ...)`, or heading `show` rules to tune density.
@@ -148,15 +150,17 @@ Key helpers in `functions.typ`:
 
 Every push to `master` (including PR merges) triggers `.github/workflows/release.yml`, which:
 
-1. Finds the latest `v1.*` tag and creates the next one (`v1.1` → `v1.2`, …).
+1. Finds the latest strict `v1.N` tag and creates the next one (`v1.1` → `v1.2`, …).
 2. Compiles `Resume_<tag>_<YYYYMMDD>.pdf` and `Bragdoc_<tag>_<YYYYMMDD>.pdf` into `dist/`.
 3. Creates a GitHub Release with a **What's Changed** section (generated notes per `.github/release.yml` categories + commit list) and attaches both PDFs.
 
 No duplicates: the workflow skips when `HEAD` is already tagged, when there are no new commits since the previous tag, or when the computed tag is taken (it bumps to the next free tag). Runs are serialized with a `concurrency` group so rapid merges can't race.
 
-To skip a release for a trivial change, include `[skip release]` in the commit message. To cut a release manually, run the workflow via **Actions → Release → Run workflow**.
+To skip a release for a trivial change, include `[skip release]` in any commit message in the release range (covers PR squash/merges). To cut a release manually, run the workflow via **Actions → Release → Run workflow**.
 
-> Tags use the `v1.<n>` scheme. Stray local tags like `v1.1.0` / `v1.2.0` don't match the increment logic — delete them (`git tag -d v1.1.0 v1.2.0`) to avoid confusion.
+> Tags use the strict `v1.<n>` scheme (`v1.0`, `v1.1`, …). The workflow only matches `^v1\.[0-9]+$` — stray tags like `v1.1.0` / `v1.2.0` are ignored by design. Delete them (`git tag -d v1.1.0 v1.2.0`) to avoid confusion.
+
+Every PR also runs a compile check (`.github/workflows/release.yml` `check` job) so broken `.typ` files can't merge silently.
 
 ## Contributing
 
