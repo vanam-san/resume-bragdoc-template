@@ -13,22 +13,19 @@
 #let url = "yourname.dev"
 
 // Social profiles: network (platform), username, url
-// Add more profiles by adding tuples to this array
+// Add more profiles by adding tuples to this array.
+// Fill in username so the contact line shows a label (e.g. "LinkedIn: yourname").
+// Any entry with a username or a URL is shown; empty entries are hidden.
 #let profiles = (
   (
     network: "LinkedIn",
-    username: "",
+    username: "yourname",
     url: "linkedin.com/in/yourname",
   ),
   (
     network: "GitHub",
-    username: "",
-    url: "github.com/yourname",
-  ),
-  (
-    network: "Instagram",
     username: "yourname",
-    url: "instagram.com/yourname",
+    url: "github.com/yourname",
   ),
 )
 
@@ -188,8 +185,14 @@
   // Add more projects as needed
 )
 
-// Render the resume
-#show: cvinit.with(author: name, title: title)
+// Render the resume.
+// compact-footer: true = page count only (best for recruiters + ATS).
+// compact: true = tighter margins/type to fit 1 page (10.5pt, less spacing).
+// For short dates ("Oct 2021 – Present"), pass short: true to daterange_short
+// in functions.typ, or simply write short dates in your data below.
+// For keyword-first resumes, move #render-custom(skills_section) to right
+// after #render-summary(summary).
+#show: cvinit.with(author: name, title: title, compact-footer: true)
 
 #render-basic-info(name: name, title: title, location: location, email: email, phone: phone, url: url, profiles: profiles)
 #v(1em)
