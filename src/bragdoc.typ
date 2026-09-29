@@ -377,7 +377,7 @@
     ),
     metrics: (
       "Resume: *2 pages*",
-      "Brag doc: *4 pages*",
+      "Brag doc: *5 pages*",
       "Releases: *automated v1.N*",
     ),
     status: "Shipped",
