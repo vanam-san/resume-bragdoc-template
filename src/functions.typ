@@ -112,7 +112,7 @@
 
 #let setrules(doc, compact: false) = {
   set text(
-    font: ("IBM Plex Sans", "DejaVu Sans"),
+    font: "IBM Plex Sans",
     size: if compact { 10.5pt } else { 11pt },
     hyphenate: false,
   )
@@ -139,7 +139,7 @@
     #v(-2pt)
     #set align(left)
     #set text(
-      font: ("IBM Plex Sans", "DejaVu Sans"),
+      font: "IBM Plex Sans",
       size: 1em,
       weight: "bold",
       fill: rgb("#1f3a5f"),
@@ -151,7 +151,7 @@
 
   show heading.where(level: 1): it => block(width: 100%)[
     #set text(
-      font: ("IBM Plex Sans", "DejaVu Sans"),
+      font: "IBM Plex Sans",
       size: 1.5em,
       weight: "bold",
       fill: rgb("#1f3a5f"),
@@ -220,6 +220,37 @@
 // Resume: Name, Title, Contact Info, LinkedIn/Profiles
 // Bragdoc: Name, Title, Review Period
 
+#let render-identity(name, title, photo, details: []) = {
+  let identity(alignment) = align(alignment)[
+    = #name
+    #if title != "" {
+      block(width: 100%)[
+        #set text(fill: rgb("#555555"))
+        *#title*
+        #v(-4pt)
+      ]
+    }
+    #details
+  ]
+
+  if photo == "" or photo == none {
+    identity(center)
+  } else {
+    let photo-size = 0.9in
+    block(width: 100%, breakable: false)[
+      #grid(
+        columns: (1fr, photo-size),
+        column-gutter: 1em,
+        align: horizon,
+        identity(left),
+        block(width: photo-size, height: photo-size, radius: 4pt, clip: true)[
+          #image(photo, width: 100%, height: 100%, fit: "cover", alt: "Profile photo")
+        ],
+      )
+    ]
+  }
+}
+
 #let render-basic-info(
   name: "",
   title: "",
@@ -228,20 +259,8 @@
   email: "",
   url: "",
   profiles: (),
+  photo: "",
 ) = {
-  align(center)[
-    = #name
-  ]
-
-  if title != "" {
-    block(width: 100%)[
-      #set align(center)
-      #set text(fill: rgb("#555555"))
-      *#title*
-      #v(-4pt)
-    ]
-  }
-
   // Contact line: skip empty fields, join the rest with " | ".
   let contact-items = (
     if location != "" { location },
@@ -273,46 +292,34 @@
       }
     })
   let all-items = contact-items + profile-items
-  // Hide the whole line when nothing is left to show.
-  if all-items.len() > 0 {
+  let contacts = if all-items.len() > 0 {
     block(width: 100%)[
-      #set align(center)
       #all-items.join([#sym.space.en | #sym.space.en])
     ]
-  }
+  } else { [] }
+
+  render-identity(name, title, photo, details: contacts)
 }
 
 #let render-header(
   name: "",
   title: "",
   review-period: "",
+  photo: "",
 ) = {
   set document(
     author: name,
     title: name + " - Brag Document",
   )
 
-  align(center)[
-    = #name
-  ]
-
-  if title != "" {
+  let period = if review-period != "" {
     block(width: 100%)[
-      #set align(center)
-      #set text(fill: rgb("#555555"))
-      *#title*
-      #v(-4pt)
-    ]
-  }
-
-  if review-period != "" {
-    block(width: 100%)[
-      #set align(center)
       #set text(style: "italic", fill: rgb("#555555"))
       #review-period
       #v(-4pt)
     ]
-  }
+  } else { [] }
+  render-identity(name, title, photo, details: period)
 }
 
 // =============================================================================
@@ -388,7 +395,7 @@
   block[
     == Experience
     #for w in valid-works {
-      let company_block = block(width: 100%, above: 0.625em)[
+      let company_header = [
         #if w.at("url", default: "") != "" [
           *#ext-link(w.at("url", default: ""), [#w.at("name", default: "")])* #h(1fr)
         ] else [
@@ -407,16 +414,19 @@
         let has-dates = p.at("startDate", default: "") != "" or p.at("endDate", default: "") != ""
         position_blocks.push(
           block(width: 100%, above: 0.375em, below: 1.25em)[
-            #if has-position {
-              text(
-                style: "italic",
-                weight: "bold",
-                fill: rgb("#1f3a5f"),
-              )[#p.at("position", default: "")] 
-              h(1fr)
+            #if has-position or has-dates {
+              block(width: 100%, below: 0.35em, sticky: valid-highlights.len() > 0)[
+                #if has-position {
+                  text(
+                    style: "italic",
+                    weight: "bold",
+                    fill: rgb("#1f3a5f"),
+                  )[#p.at("position", default: "")]
+                  h(1fr)
+                }
+                #daterange_short(p.at("startDate", default: ""), p.at("endDate", default: ""))
+              ]
             }
-            #if has-position or has-dates { daterange_short(p.at("startDate", default: ""), p.at("endDate", default: "")) }
-            #if has-position or has-dates { [\ ] }
             #for hi in valid-highlights [
               - #parse-bold(hi)
             ]
@@ -424,7 +434,7 @@
         )
       }
 
-      company_block
+      block(width: 100%, above: 0.625em, sticky: position_blocks.len() > 0, company_header)
       for pb in position_blocks { pb }
     }
   ]
@@ -493,21 +503,23 @@
 // MAJOR ACCOMPLISHMENTS SECTION (Bragdoc)
 // =============================================================================
 
-#let render-accomplishments(accomplishments) = {
+#let render-accomplishments(accomplishments, heading: "Major Accomplishments") = {
   let accs-arr = as-array(accomplishments)
   if accs-arr.len() == 0 { return }
   let valid-accs = accs-arr.filter(a => type(a) == dictionary and (a.at("title", default: "") != "" or a.at("what", default: "") != "" or a.at("impact", default: "") != ""))
   if valid-accs.len() == 0 { return }
   block[
-    == Major Accomplishments
+    == #heading
 
     #for acc in valid-accs {
       block(width: 100%, above: 0.25em, below: 1.25em)[
         #if acc.at("title", default: "") != "" { text(weight: "bold", fill: rgb("#1f3a5f"))[#acc.at("title", default: "")] + [\ ] }
-        #if acc.at("what", default: "") != "" [ - *What I did:* #parse-bold(acc.at("what", default: "")) \ ]
-        #if acc.at("why", default: "") != "" [ - *Why it mattered:* #parse-bold(acc.at("why", default: "")) \ ]
         #if acc.at("impact", default: "") != "" [ - *Impact:* #parse-bold(acc.at("impact", default: "")) \ ]
-        #if acc.at("collaborators", default: "") != "" [ - *Who I worked with:* #acc.at("collaborators", default: "") \ ]
+        #if acc.at("what", default: "") != "" [ - *Contribution:* #parse-bold(acc.at("what", default: "")) \ ]
+        #if acc.at("why", default: "") != "" [ - *Context:* #parse-bold(acc.at("why", default: "")) \ ]
+        #if acc.at("collaborators", default: "") != "" [ - *Collaborators:* #acc.at("collaborators", default: "") \ ]
+        #if acc.at("follow-up", default: "") != "" [ - *What changed:* #parse-bold(acc.at("follow-up", default: "")) \ ]
+        #if acc.at("evidence", default: "") != "" [ - *Evidence:* #acc.at("evidence", default: "") \ ]
         #if acc.at("date", default: "") != "" [ - *Date:* #acc.at("date", default: "") \ ]
       ]
     }
@@ -523,10 +535,10 @@
   let valid-areas = as-array(focus-areas).filter(a => a != "" and a != none)
   if valid-goals.len() == 0 and valid-areas.len() == 0 { return }
   block[
-    == Goals & Focus Areas
+    == #if valid-areas.len() == 0 [Goals] else [Goals & Focus Areas]
 
     #if valid-goals.len() > 0 {
-      [*What were your main goals this period?*]
+      if valid-areas.len() > 0 { [*What were your main goals this period?*] }
       for goal in valid-goals [
         - #parse-bold(goal)
       ]
@@ -710,8 +722,10 @@
   block[
     #if custom_section.at("title", default: "") != "" [ == #custom_section.at("title", default: "") ]
     #for highlight in valid-highlights [
-      - #if highlight.at("summary", default: "") != "" { [*#highlight.at("summary", default: "")*] }
-        #if highlight.at("summary", default: "") != "" and highlight.at("description", default: "") != "" { [: ] }
+      - #if highlight.at("summary", default: "") != "" {
+          strong(highlight.at("summary", default: ""))
+          if highlight.at("description", default: "") != "" { [: ] }
+        }
         #if highlight.at("description", default: "") != "" { [#parse-bold(highlight.at("description", default: ""))] }
     ]
   ]
@@ -790,6 +804,8 @@
   impact: "",
   collaborators: "",
   date: "",
+  follow-up: "",
+  evidence: "",
 ) = {
   (
     title: title,
@@ -798,6 +814,8 @@
     impact: impact,
     collaborators: collaborators,
     date: date,
+    follow-up: follow-up,
+    evidence: evidence,
   )
 }
 

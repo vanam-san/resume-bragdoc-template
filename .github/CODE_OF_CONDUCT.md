@@ -4,6 +4,10 @@
 
 We are committed to providing a welcoming and inclusive experience for everyone. We pledge to act and interact in ways that contribute to an open, friendly, diverse, and healthy community.
 
+## Scope
+
+This code applies in project spaces, including issues, pull requests, discussions, and reviews. It also applies when someone publicly represents the project.
+
 ## Expected Behavior
 
 - **Be respectful**: Treat everyone with respect. No harassment, discrimination, or inappropriate behavior.
@@ -16,7 +20,8 @@ We are committed to providing a welcoming and inclusive experience for everyone.
 - Harassment, trolling, or personal attacks
 - Discriminatory language or imagery
 - Sexualized language or unwelcome sexual attention
-- Publishing others' private information without permission
+- Publishing others' private information without permission, including contact details, performance feedback, or private work records
+- Retaliating against someone for reporting misconduct
 - Any other conduct that would be inappropriate in a professional setting
 
 ## Enforcement
@@ -25,4 +30,6 @@ Project maintainers may remove, edit, or reject comments, commits, code, issues,
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, please report it by opening a discussion in the [Discussions tab](https://github.com/vanam-san/resume-bragdoc-template/discussions). Keep reports factual and avoid posting anyone's private information; maintainers will follow up and keep sensitive details confidential.
+If you experience or witness unacceptable behavior, use **Report content** on the relevant GitHub item. Choose **Report to repository admins** if available, or report to GitHub Support through its [abuse reporting process](https://docs.github.com/en/communities/maintaining-your-safety-on-github/reporting-abuse-or-spam). Include relevant links, dates, and a brief account of what happened. Keep reports and supporting personal information out of public issues and discussions.
+
+Maintainers will limit access to reports to the people needed to review and respond.

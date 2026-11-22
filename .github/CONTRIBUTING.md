@@ -14,7 +14,7 @@ Thanks for your interest in contributing to this template! Here are some guideli
 
 ### Prerequisites
 
-- [Typst](https://typst.app/docs/install/) installed locally
+- Docker running with Compose v2 or later
 - [Task](https://taskfile.dev/installation/) (optional, for convenience)
 
 ### Local Development
@@ -27,9 +27,9 @@ cd resume-bragdoc-template
 # Watch for changes (live preview)
 task dev
 
-# Or compile manually (fonts are vendored in src/fonts)
-typst compile --font-path src/fonts src/resume.typ src/resume.pdf
-typst compile --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
+# Compile without Task
+docker compose run --rm typst compile src/resume.typ src/resume.pdf
+docker compose run --rm typst compile src/bragdoc.typ src/bragdoc.pdf
 ```
 
 ## Guidelines
@@ -59,6 +59,8 @@ Examples:
 - Describe what you changed and why
 - Test your changes locally before submitting
 - Update documentation if adding new features
+- Regenerate previews with `task previews` when changing visible sample content or layout
+- Use fictional examples and image assets you have permission to share
 
 ### Issues
 
@@ -68,7 +70,7 @@ Examples:
 
 ## Releases
 
-Every merge to `master` automatically cuts a `v1.N` release with fresh PDFs (see `.github/workflows/release.yml`). Batch trivial changes where possible, and include `[skip release]` in any commit message in the release range to suppress a release for a trivial update.
+Pushes to `master` create a `v1.N` release after both PDFs compile. Put `[skip release]` in the head commit message to skip that push's release. The upstream template publishes both demos. For other repositories, see the [brag document opt-in instructions](../README.md#opt-in-to-brag-document-releases).
 
 ## What Can I Contribute?
 

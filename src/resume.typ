@@ -6,7 +6,8 @@
 
 // Personal info - update with your details
 #let name = "YOUR NAME"
-#let title = "Senior Full Stack Engineer"
+#let photo = "Elmo.jpg" // Optional image path relative to src. Use "" to hide it.
+#let title = "Engineering Manager - Web App Team"
 #let location = "Palo Alto, California, USA"
 #let email = "your.name@example.com"
 #let phone = "+1 (555) 123-4567"
@@ -194,7 +195,7 @@
 // after #render-summary(summary).
 #show: cvinit.with(author: name, title: title, compact-footer: true)
 
-#render-basic-info(name: name, title: title, location: location, email: email, phone: phone, url: url, profiles: profiles)
+#render-basic-info(name: name, title: title, location: location, email: email, phone: phone, url: url, profiles: profiles, photo: photo)
 #v(1em)
 #render-summary(summary)
 #v(1em)
