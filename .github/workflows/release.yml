@@ -14,40 +14,51 @@ on:
       - dev
   workflow_dispatch:
 
-# Serialize releases so two rapid merges can't pick the same tag.
-concurrency:
-  group: release-master
-  cancel-in-progress: false
+permissions:
+  contents: read
 
 jobs:
   check:
+    name: Check PDF builds
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: pdf-check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-
-      - name: Setup Typst
-        uses: typst-community/setup-typst@v5
         with:
-          typst-version: "0.15.1"
+          persist-credentials: false
 
-      - name: Compile Resume and Brag Document
+      - name: Compile and check both PDFs
         run: |
-          typst compile --font-path src/fonts src/resume.typ /tmp/resume.pdf
-          typst compile --font-path src/fonts src/bragdoc.typ /tmp/bragdoc.pdf
-          ls -la /tmp/*.pdf
+          docker compose run --rm -T typst compile src/resume.typ src/resume.pdf
+          docker compose run --rm -T typst compile src/bragdoc.typ src/bragdoc.pdf
+          test -s src/resume.pdf
+          test -s src/bragdoc.pdf
 
   release:
+    name: Publish release PDFs
     if: github.event_name == 'push'
+    needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: release-master
+      cancel-in-progress: false
     permissions:
       contents: write
+    env:
+      # The upstream repo publishes fictional demos. Copies opt in with a repository variable.
+      PUBLISH_BRAGDOC: ${{ vars.PUBLISH_BRAGDOC || (github.repository == 'vanam-san/resume-bragdoc-template' && 'true') || 'false' }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Resolve next version
         id: version
@@ -55,8 +66,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-
-          git fetch --tags origin
 
           # Re-run guard: HEAD already carries a release tag.
           if git tag --points-at HEAD | grep -Eq '^v1\.[0-9]+$'; then
@@ -70,16 +79,14 @@ jobs:
 
           if [ -z "$PREV_TAG" ]; then
             NEW_TAG="v1.0"
-            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
           else
             MINOR=$(echo "$PREV_TAG" | sed -E 's/^v1\.([0-9]+)$/\1/')
             NEW_TAG="v1.$((MINOR + 1))"
             RANGE="${PREV_TAG}..HEAD"
           fi
 
-          # Opt out of a release for trivial changes: flag anywhere in the
-          # range (covers PR squash/merges, not just the merge-commit subject).
-          if git log --pretty=%B "$RANGE" | grep -qi '\[skip release\]'; then
+          # The flag applies to this push's head commit only.
+          if [[ "$(git log -1 --format=%B HEAD | tr '[:upper:]' '[:lower:]')" == *"[skip release]"* ]]; then
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             echo "reason=skip-release-flag" >> "$GITHUB_OUTPUT"
             exit 0
@@ -109,23 +116,22 @@ jobs:
           echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Setup Typst
-        if: steps.version.outputs.should_release == 'true'
-        uses: typst-community/setup-typst@v5
-        with:
-          typst-version: "0.15.1"
-
       - name: Generate date string
         if: steps.version.outputs.should_release == 'true'
         id: date
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
-      - name: Compile Resume and Brag Document
+      - name: Compile release PDFs
         if: steps.version.outputs.should_release == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.new_tag }}
+          RELEASE_DATE: ${{ steps.date.outputs.date }}
         run: |
           mkdir -p dist
-          typst compile --font-path src/fonts src/resume.typ "dist/Resume_${{ steps.version.outputs.new_tag }}_${{ steps.date.outputs.date }}.pdf"
-          typst compile --font-path src/fonts src/bragdoc.typ "dist/Bragdoc_${{ steps.version.outputs.new_tag }}_${{ steps.date.outputs.date }}.pdf"
+          docker compose run --rm -T typst compile src/resume.typ "dist/Resume_${RELEASE_TAG}_${RELEASE_DATE}.pdf"
+          if [[ "$PUBLISH_BRAGDOC" == "true" ]]; then
+            docker compose run --rm -T typst compile src/bragdoc.typ "dist/Bragdoc_${RELEASE_TAG}_${RELEASE_DATE}.pdf"
+          fi
           ls -la dist/*.pdf
 
       - name: Generate changelog
@@ -140,7 +146,7 @@ jobs:
           if [ -n "$PREV_TAG" ]; then
             RANGE="${PREV_TAG}..HEAD"
           else
-            RANGE="$(git rev-list --max-parents=0 HEAD)..HEAD"
+            RANGE="HEAD"
           fi
 
           # GitHub-generated notes (uses .github/release.yml categories).

@@ -1,0 +1,8 @@
+services:
+  typst:
+    image: ghcr.io/typst/typst:0.15.1
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      TYPST_FONT_PATHS: /workspace/src/fonts

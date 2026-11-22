@@ -29,13 +29,10 @@ changelog:
         - ci
         - test
 
-    - title: Other Changes
-      labels:
-        - "*"
-      exclude:
-        labels:
-          - dependencies
-
     - title: Added/Updated Dependencies
       labels:
         - dependencies
+
+    - title: Other Changes
+      labels:
+        - "*"

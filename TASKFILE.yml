@@ -1,11 +1,13 @@
 version: '3'
 
+vars:
+  TYPST: docker compose run --rm typst
+
 tasks:
   default:
-    desc: Pull latest changes and start development
-    deps:
-      - pull
-      - dev
+    desc: Compile both PDFs
+    cmds:
+      - task: compile
 
   pull:
     desc: Pull latest changes from Git
@@ -13,35 +15,45 @@ tasks:
       - git pull
 
   dev:
-    desc: Watch resume and bragdoc in parallel (Ctrl+C stops both)
+    desc: Watch both documents and rebuild PDFs on save
+    watch: true
+    method: none
+    sources: [src/**/*.typ, src/**/*.jpg, src/**/*.jpeg, src/**/*.png, src/fonts/*.ttf, compose.yaml]
     cmds:
-      # Task deps run sequentially and `typst watch` blocks, so run both
-      # watchers as background jobs in one shell instead.
-      # --font-path picks up the vendored IBM Plex Sans in src/fonts.
-      - typst watch --font-path src/fonts src/resume.typ src/resume.pdf & typst watch --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf & wait
+      - task: compile
 
   dev-resume:
-    desc: Watch and rebuild resume
+    desc: Watch and rebuild the resume
+    watch: true
+    method: none
+    sources: [src/resume.typ, src/functions.typ, src/**/*.jpg, src/**/*.jpeg, src/**/*.png, src/fonts/*.ttf, compose.yaml]
     cmds:
-      - typst watch --font-path src/fonts src/resume.typ src/resume.pdf
+      - task: compile-resume
 
   dev-bragdoc:
-    desc: Watch and rebuild bragdoc
+    desc: Watch and rebuild the brag document
+    watch: true
+    method: none
+    sources: [src/bragdoc.typ, src/functions.typ, src/**/*.jpg, src/**/*.jpeg, src/**/*.png, src/fonts/*.ttf, compose.yaml]
     cmds:
-      - typst watch --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
+      - task: compile-bragdoc
 
   compile:
-    desc: Compile resume and bragdoc
-    deps:
-      - compile-resume
-      - compile-bragdoc
+    desc: Compile both PDFs
+    deps: [compile-resume, compile-bragdoc]
 
   compile-resume:
-    desc: Compile resume PDF
+    desc: Compile the resume PDF
     cmds:
-      - typst compile --font-path src/fonts src/resume.typ src/resume.pdf
+      - '{{.TYPST}} compile src/resume.typ src/resume.pdf'
 
   compile-bragdoc:
-    desc: Compile bragdoc PDF
+    desc: Compile the brag document PDF
     cmds:
-      - typst compile --font-path src/fonts src/bragdoc.typ src/bragdoc.pdf
+      - '{{.TYPST}} compile src/bragdoc.typ src/bragdoc.pdf'
+
+  previews:
+    desc: Refresh the first-page PNG previews
+    cmds:
+      - '{{.TYPST}} compile --pages 1 --ppi 150 src/resume.typ preview-resume.png'
+      - '{{.TYPST}} compile --pages 1 --ppi 150 src/bragdoc.typ preview-bragdoc.png'

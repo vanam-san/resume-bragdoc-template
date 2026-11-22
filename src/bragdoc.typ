@@ -7,8 +7,46 @@
 
 // Personal info - update with your details
 #let name = "YOUR NAME"
+#let photo = "" // Optional image path relative to src, e.g. "headshot.jpg".
 #let title = "Senior Full Stack Engineer"
 #let review-period = "May 2011 – Present"
+
+// Fictional interview stories. Replace the evidence references with private records.
+#let interview-stories = (
+  accomplishment(
+    title: "Hiring and coaching — Growing the Web App Team",
+    why: "The feed roadmap and on-call rotation depended on the same six engineers.",
+    what: "Set hiring priorities and introduced onboarding milestones and paired on-call shifts.",
+    collaborators: "Recruiting ran the hiring pipeline. Senior engineers coached new hires and signed off on on-call readiness.",
+    impact: "Grew the Web App Team from *6 to 12 engineers* and expanded the on-call rotation.",
+    evidence: "Headcount plan, onboarding checklists, and rotation roster.",
+  ),
+  accomplishment(
+    title: "Prioritization — Delaying the orbital hosting rollout",
+    why: "Finance wanted savings quickly, while Operations needed a safe rollback path.",
+    what: "Chose a phased rollout and deferred wider deployment until the pilot met recovery and cost targets.",
+    collaborators: "Operations owned recovery drills. Finance validated the savings model.",
+    impact: "The phased rollout offset *$2M per year* in infrastructure costs.",
+    evidence: "Rollout decision record and Finance's cost reconciliation.",
+  ),
+  accomplishment(
+    title: "Delivery — Increasing deployment frequency",
+    why: "Large release batches made it difficult to isolate failures.",
+    what: "Set rollout criteria for smaller batches and automated rollback on the feed release pipeline.",
+    collaborators: "Release Engineering built the automation. The Web App Team piloted the new release cadence.",
+    impact: "Production deployments per week increased by *72%* after rollout.",
+    evidence: "Release dashboard comparing deployment frequency before and after rollout.",
+  ),
+  accomplishment(
+    title: "Setback — Pausing the first hosting pilot",
+    why: "The pilot missed its recovery target when the team tested a failed deployment.",
+    what: "Paused expansion, restored traffic to the original hosts, and assigned owners for the gaps before retrying.",
+    collaborators: "Operations led recovery. The Web App Team reproduced the failure and updated the runbook.",
+    impact: "The retry met the recovery target before additional traffic moved.",
+    follow-up: "Made a timed rollback drill a requirement before every rollout phase.",
+    evidence: "Pilot incident timeline, revised runbook, and retry drill results.",
+  ),
+)
 
 // Goals and focus areas for the review period
 #let goals = (
@@ -196,9 +234,8 @@
   ),
   accomplishment(
     title: "Promotion to Engineering Manager (Instagram)",
-    what: "Promoted to EM, leading the *Web App Team* building the *BlockChain news feed*",
+    what: "Promoted to EM, leading the *Web App Team* building the *BlockChain news feed*. See the featured hiring and prioritization stories for the full examples.",
     why: "Needed engineering leadership for a growing team and *orbital hosting ops*",
-    impact: "Scaled team to *12* and offset *$2M/year* in infra costs",
     collaborators: "Web App Team and cross-functional partners",
     date: "2021-Present",
   ),
@@ -430,19 +467,21 @@
   metric-entry(
     label: "Team Scaled To",
     value: "*12 engineers*",
-    description: "Grew the *Web App Team* after promotion to EM",
+    description: "See Hiring and coaching — Growing the Web App Team.",
   ),
   metric-entry(
     label: "Infra Cost Offset",
     value: "*$2M/year*",
-    description: "Via managed *arcade hosting* on cabinets in low Earth orbit",
+    description: "See Prioritization — Delaying the orbital hosting rollout.",
   ),
 )
 
 // Render the brag document
 #show: cvinit.with(author: name, title: name + " - Brag Document", numbering: "1")
 
-#render-header(name: name, title: title, review-period: review-period)
+#render-header(name: name, title: title, review-period: review-period, photo: photo)
+#v(1em)
+#render-accomplishments(interview-stories, heading: "Featured Interview Stories")
 #v(1em)
 #render-goals(goals, focus-areas)
 #v(1em)
